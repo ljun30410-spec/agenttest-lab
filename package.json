@@ -1,7 +1,7 @@
 {
-  "name": "ai-agent-test-tool",
+  "name": "agenttest-lab",
   "version": "1.0.0",
-  "description": "AI Agent 测试工具：批量执行 + 关键词软断言 + AI 裁判 + AI 生成用例",
+  "description": "AgentTest Lab：面向 AI Agent 的批量测试、AI 裁判和工具调用链 Trace 校验平台",
   "private": true,
   "scripts": {
     "start": "node server.js",

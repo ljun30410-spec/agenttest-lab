@@ -1,5 +1,5 @@
 /**
- * AI Agent 测试工具后端服务
+ * AgentTest Lab 后端服务
  * 提供 CORS 代理，解决跨域问题
  */
 

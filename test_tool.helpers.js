@@ -1,5 +1,5 @@
 /**
- * AI Agent 测试工具 — 可复用辅助函数（多轮会话 / SSE 归一化）
+ * AgentTest Lab — 可复用辅助函数（多轮会话 / SSE 归一化）
  */
 (function (root, factory) {
     if (typeof module === 'object' && module.exports) {
