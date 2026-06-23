@@ -1,0 +1,16 @@
+{
+  "name": "ai-agent-test-tool",
+  "version": "1.0.0",
+  "description": "AI Agent 测试工具：批量执行 + 关键词软断言 + AI 裁判 + AI 生成用例",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_tool.helpers.test.js",
+    "smoke": "node src/llm/smoke.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^0.2.0",
+    "ai": "^4.3.19",
+    "dotenv": "^16.4.5"
+  }
+}

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent 测试工具 · 使用手册</title>
+<style>
+    :root {
+        --primary: #667eea;
+        --primary-dark: #5566d6;
+        --bg: #f5f6fb;
+        --card: #ffffff;
+        --text: #2c2e3a;
+        --muted: #6c757d;
+        --border: #e6e8f0;
+        --ok: #28a745;
+        --warn: #b8860b;
+        --danger: #dc3545;
+        --code-bg: #f3f4fb;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.7;
+    }
+    .layout { display: flex; max-width: 1180px; margin: 0 auto; }
+
+    /* 侧边目录 */
+    .sidebar {
+        width: 240px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        align-self: flex-start;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 28px 16px;
+        border-right: 1px solid var(--border);
+        background: #fff;
+    }
+    .sidebar h3 {
+        font-size: 0.78em;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin: 18px 8px 8px;
+    }
+    .sidebar a {
+        display: block;
+        padding: 6px 10px;
+        margin: 1px 0;
+        border-radius: 6px;
+        color: var(--text);
+        text-decoration: none;
+        font-size: 0.92em;
+    }
+    .sidebar a:hover { background: #f0f1ff; color: var(--primary-dark); }
+
+    /* 主体 */
+    .content { flex: 1; padding: 40px 48px 80px; min-width: 0; }
+
+    .hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border-radius: 16px;
+        padding: 40px 36px;
+        margin-bottom: 36px;
+        box-shadow: 0 8px 24px rgba(102,126,234,0.25);
+    }
+    .hero h1 { margin: 0 0 10px; font-size: 2.1em; }
+    .hero p { margin: 0; opacity: 0.95; font-size: 1.05em; }
+    .hero .badges { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .hero .badge {
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.82em;
+    }
+
+    section { margin-bottom: 40px; scroll-margin-top: 20px; }
+    h2 {
+        font-size: 1.5em;
+        margin: 0 0 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--border);
+    }
+    h3 { font-size: 1.15em; margin: 24px 0 10px; }
+    p { margin: 10px 0; }
+
+    .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin: 16px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    code {
+        background: var(--code-bg);
+        color: #d6336c;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.9em;
+        font-family: "SF Mono", Monaco, Consolas, monospace;
+    }
+    pre {
+        background: #2d2f3b;
+        color: #e6e8f0;
+        padding: 16px 18px;
+        border-radius: 10px;
+        overflow-x: auto;
+        font-size: 0.88em;
+        line-height: 1.6;
+    }
+    pre code { background: none; color: inherit; padding: 0; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 14px 0;
+        font-size: 0.92em;
+    }
+    th, td {
+        border: 1px solid var(--border);
+        padding: 9px 12px;
+        text-align: left;
+        vertical-align: top;
+    }
+    th { background: #f7f8fd; font-weight: 600; }
+    tr:nth-child(even) td { background: #fbfbfe; }
+
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps > li {
+        position: relative;
+        padding: 4px 0 18px 46px;
+        margin: 0;
+    }
+    .steps > li::before {
+        counter-increment: step;
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 30px;
+        height: 30px;
+        background: var(--primary);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9em;
+    }
+    .steps > li:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        left: 14px;
+        top: 32px;
+        bottom: 4px;
+        width: 2px;
+        background: var(--border);
+    }
+
+    .note, .warn, .tip {
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 16px 0;
+        font-size: 0.94em;
+    }
+    .note { background: #eef2ff; border-left: 4px solid var(--primary); }
+    .warn { background: #fff8e6; border-left: 4px solid var(--warn); }
+    .tip  { background: #eafaef; border-left: 4px solid var(--ok); }
+
+    .pill {
+        display: inline-block;
+        font-size: 0.78em;
+        padding: 2px 9px;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-right: 6px;
+    }
+    .pill.ai { background: #ede7ff; color: #6f42c1; }
+    .pill.rule { background: #e3f1ff; color: #1c7ed6; }
+
+    .kbd {
+        background: #fff;
+        border: 1px solid #ccc;
+        border-bottom-width: 2px;
+        border-radius: 5px;
+        padding: 1px 7px;
+        font-size: 0.85em;
+        font-family: monospace;
+    }
+    footer {
+        margin-top: 50px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.88em;
+    }
+    @media (max-width: 820px) {
+        .sidebar { display: none; }
+        .content { padding: 24px 18px 60px; }
+        .hero { padding: 28px 22px; }
+    }
+</style>
+</head>
+<body>
+<div class="layout">
+    <nav class="sidebar">
+        <h3>开始</h3>
+        <a href="#intro">工具简介</a>
+        <a href="#why">解决什么问题</a>
+        <a href="#quickstart">快速开始</a>
+        <h3>使用</h3>
+        <a href="#overview">界面总览</a>
+        <a href="#step1">① 配置接口</a>
+        <a href="#step2">② 准备用例</a>
+        <a href="#modes">单次 / 多轮模式</a>
+        <a href="#step3">③ 配置 AI 能力</a>
+        <a href="#step4">④ 执行测试</a>
+        <a href="#step5">⑤ 看懂报告</a>
+        <a href="#step6">⑥ 历史与对比</a>
+        <h3>进阶</h3>
+        <a href="#assertion">断言机制说明</a>
+        <a href="#trace">Agent Trace 测试</a>
+        <a href="#reports">报告管理</a>
+        <a href="#security">安全说明</a>
+        <a href="#faq">常见问题</a>
+        <a href="#files">文件结构</a>
+    </nav>
+
+    <main class="content">
+        <div class="hero">
+            <h1>AI Agent 测试工具</h1>
+            <p>面向「AI 问答 / Agent」类系统的轻量级批量测试工具，覆盖「输入 → 执行 → 断言 → 报告 → 回归对比」完整闭环。</p>
+            <div class="badges">
+                <span class="badge">批量执行 + 并发</span>
+                <span class="badge">单次 / 多轮对话</span>
+                <span class="badge">关键词软断言</span>
+                <span class="badge">AI 裁判断言</span>
+                <span class="badge">Agent Trace 测试</span>
+                <span class="badge">AI 生成用例</span>
+                <span class="badge">历史对比 / 回归</span>
+                <span class="badge">报告导出</span>
+            </div>
+        </div>
+
+        <section id="intro">
+            <h2>工具简介</h2>
+            <p>这是一个本地运行的网页工具，用来对 AI 问答 / Agent 接口做<strong>批量回归测试</strong>。你只需要把一条真实接口的 cURL 命令和一批测试用例丢进去，它会自动逐条发送请求、校验回答、生成可视化报告，并支持与历史结果对比，快速发现「这次改动让哪些用例变好 / 变坏了」。</p>
+            <div class="card">
+                <p style="margin:0;">技术构成非常轻量：</p>
+                <ul style="margin:8px 0 0;">
+                    <li><strong>后端</strong>：<code>server.js</code>，充当 CORS 代理、报告存储、AI 模型调用和静态文件服务。</li>
+                    <li><strong>前端</strong>：<code>test_tool.html</code> + <code>test_tool.helpers.js</code>，纯原生 JS，无需构建。</li>
+                    <li><strong>AI 能力</strong>：通过 Vercel AI SDK 调用 OpenAI 兼容模型，默认面向腾讯云 TokenHub。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="why">
+            <h2>它解决什么问题</h2>
+            <p>传统接口测试用「精确匹配」来断言，但 AI 的回答是<strong>不确定的自然语言</strong>，每次措辞都不一样，没法逐字比对。本工具针对这一特点提供了多层断言能力：</p>
+            <table>
+                <thead><tr><th>能力</th><th>说明</th><th>类型</th></tr></thead>
+                <tbody>
+                    <tr><td>基础校验</td><td>状态码、响应时间、内容长度</td><td><span class="pill rule">规则</span></td></tr>
+                    <tr><td>关键词软断言</td><td>命中率达到阈值即通过，不要求逐字全中</td><td><span class="pill rule">规则</span></td></tr>
+                    <tr><td>Agent Trace 断言</td><td>验证真实工具调用链、步骤顺序和工具耗时</td><td><span class="pill rule">规则</span></td></tr>
+                    <tr><td>AI 裁判断言</td><td>用大模型判断回答是否语义正确、是否安全合规</td><td><span class="pill ai">模型</span></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="quickstart">
+            <h2>快速开始</h2>
+            <ol class="steps">
+                <li>
+                    <h3 style="margin-top:0;">确认环境</h3>
+                    <p>本机安装 Node.js（建议 v18 以上）。首次使用请在项目目录安装依赖：</p>
+                    <pre><code>npm install</code></pre>
+                </li>
+                <li>
+                    <h3 style="margin-top:0;">启动服务</h3>
+                    <p>在项目目录下运行：</p>
+                    <pre><code>cd "AI agent 测试"
+node server.js</code></pre>
+                    <p>看到 <code>Server running on http://localhost:5001</code> 即启动成功。</p>
+                    <div class="tip">💡 建议在<strong>你自己的终端</strong>里启动，这样服务会一直常驻，不受其他程序影响。</div>
+                </li>
+                <li>
+                    <h3 style="margin-top:0;">打开页面</h3>
+                    <p>浏览器访问 <code>http://localhost:5001/</code> 即可开始使用。</p>
+                </li>
+            </ol>
+        </section>
+
+        <section id="overview">
+            <h2>界面总览</h2>
+            <p>页面从上到下分为几个区域：</p>
+            <table>
+                <thead><tr><th>区域</th><th>作用</th></tr></thead>
+                <tbody>
+                    <tr><td>接口配置</td><td>粘贴 cURL、设置问题字段路径 / knowledgeId 字段路径；多轮模式下还会显示 conversationId 字段路径</td></tr>
+                    <tr><td>黄金数据集</td><td>填写 / 上传 / AI 生成测试用例，切换单次 / 多轮模式，设置并发数与关键词阈值</td></tr>
+                    <tr><td>AI 断言（裁判模型）</td><td>开关 + 模型配置，用于语义 / 安全断言</td></tr>
+                    <tr><td>🚀 开始测试 / 📚 历史与对比</td><td>执行测试 / 查看历史并对比</td></tr>
+                    <tr><td>测试报告</td><td>结果汇总、筛选搜索、重跑失败、Trace 查看、导出</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="step1">
+            <h2>① 配置接口</h2>
+            <ol class="steps">
+                <li>
+                    <h3 style="margin-top:0;">粘贴 cURL 命令</h3>
+                    <p>在浏览器开发者工具或抓包工具里，对被测接口「复制为 cURL」，粘贴到 <strong>Curl 命令</strong> 框。工具会自动解析出 URL、请求头和请求体。</p>
+                    <div class="warn">⚠ cURL 里通常包含你的登录态（Cookie / Token），请用本人账号的正常请求，测试过程中不要再用该账号手动发起 AI 请求，以免互相干扰。</div>
+                </li>
+                <li>
+                    <h3 style="margin-top:0;">设置问题字段路径</h3>
+                    <p><strong>问题字段路径</strong>：测试问题写入请求体的哪个位置。填 <code>auto</code> 会自动识别 <code>message.content</code> / <code>question</code> / <code>query</code> 等常见字段；也可手动指定，如 <code>message.content</code>。</p>
+                </li>
+                <li>
+                    <h3 style="margin-top:0;">设置 knowledgeId 字段路径（可选）</h3>
+                    <p>若接口需要知识库 ID，填写其字段路径（支持嵌套，如 <code>message.extraData.knowledgeId</code>）；不需要则留空或填 <code>none</code>。用例里的 <code>knowledgeId: null</code> 表示沿用 cURL 请求体中的原值，不会覆盖。</p>
+                </li>
+                <li>
+                    <h3 style="margin-top:0;">设置 conversationId 字段路径（多轮模式）</h3>
+                    <p>打开 <strong>多轮对话模式</strong> 后会显示 <strong>conversationId 字段路径</strong>。默认是 <code>conversationId</code>，用于把同一个真实会话 ID 写入后续轮次。</p>
+                    <div class="warn">⚠ 工具不会伪造新的 <code>conversationId</code>。它只会复用 cURL 里已有的真实 ID，或从首轮流式响应里的 <code>conversationId</code> / <code>conversation_id</code> / <code>conversation.id</code> 提取真实 ID 后用于后续轮次。如果接口要求先创建会话，请先在产品里复制一条有效会话的 cURL，或确认首轮接口会返回真实会话 ID。</div>
+                </li>
+            </ol>
+        </section>
+
+        <section id="step2">
+            <h2>② 准备测试用例</h2>
+            <p>共有 <strong>四种方式</strong>，可任选其一，结果都会进入下方「测试用例」文本框，运行前都可以再编辑。</p>
+
+            <h3>方式 A：手动填写 / 粘贴</h3>
+            <p>支持 <strong>JSON 数组</strong> 或 <strong>Markdown 表格</strong> 两种格式。默认是单次对话模式，JSON 示例：</p>
+            <pre><code>[
+  {
+    "id": "FT-001",
+    "title": "基础问答",
+    "type": "功能测试",
+    "priority": "P0",
+    "question": "重低音测试的作用是什么？",
+    "knowledgeId": null,
+    "expected": {
+      "status_code": 200,
+      "keywords": ["重低音", "测试", "音频设备"],
+      "min_length": 10,
+      "max_time": 50
+    },
+    "validation_points": "答案与资料一致"
+  }
+]</code></pre>
+            <div class="note"><code>knowledgeId: null</code> 表示不从用例覆盖知识库 ID，优先使用你粘贴的 cURL 请求体里的真实值。不要把示例占位符写成真实 ID。</div>
+            <div class="tip">💡 单次模式的 JSON 模板会包含 <code>FT-001</code>、<code>BT-001</code> 和 <code>TR-001</code>。其中 <code>TR-001</code> 是 Agent Trace 示例，用来演示如何校验 <code>web_search</code> 等工具调用。</div>
+
+            <h3>方式 B：上传文件 <span class="pill rule">无需模型</span></h3>
+            <p>点击 <strong>📁 上传用例文件</strong>，支持 <code>.md</code> / <code>.json</code> / <code>.csv</code> / <code>.xlsx</code>。CSV/Excel 的列名支持中英文别名（如「输入问题 / question」「关键词 / keywords」「优先级 / priority」），顺序随意。</p>
+            <div class="tip">💡 不知道该传什么格式？点旁边的 <strong>下载模板</strong>（.md / .json / .csv），下载示例文件、填好再传回来即可。模板会根据当前「单次 / 多轮」模式自动切换。</div>
+            <div class="note">📎 <code>.xlsx</code> 解析需要联网加载一次解析库；纯离线环境请用 <code>.csv</code> / <code>.json</code> / <code>.md</code>。</div>
+
+            <h3>方式 C：AI 转换用例 <span class="pill ai">模型</span></h3>
+            <p>展开 <strong>🪄 AI 转换用例（自然语言 → 标准格式）</strong>，把你已经写好的自然语言用例粘进去，点 <strong>🪄 转换为标准用例</strong>。这个功能只做结构化整理，不会发散新增用例：输入几条自然语言用例，就必须输出几条标准 JSON 用例。</p>
+            <div class="tip">💡 推荐一行写一条用例；如果某条用例很长，可以用单独一行 <code>---</code> 分隔。系统不会按普通句号拆分，避免把同一条用例误拆成多条。</div>
+            <div class="tip">💡 如果自然语言里写了“触发联网搜索 / 调用 web_search”，会补充 <code>expected.trace.required_tools</code>；写了“不应联网 / 不要调用 web_search”，会补充 <code>expected.trace.forbidden_tools</code>。</div>
+            <div class="warn">⚠ 如果模型返回数量和输入条数不一致，转换会直接失败并提示重试，而不是把多出来或少掉的用例填入文本框。</div>
+
+            <h3>方式 D：AI 生成用例 <span class="pill ai">模型</span></h3>
+            <p>展开 <strong>🤖 AI 生成用例（草稿）</strong>，用自然语言描述需求（或粘贴整段需求文档），设置生成条数，点 <strong>✨ 生成用例</strong>。模型会自动起草覆盖功能 / 边界 / 异常 / 安全等维度的用例，填入文本框。</p>
+            <div class="warn">⚠ AI 生成的是<strong>草稿</strong>，结果存在不确定性。请务必人工审核 / 微调（尤其是关键词和 knowledgeId）后再运行。此功能复用下方「AI 断言」的模型配置。</div>
+
+            <h3>两个参数</h3>
+            <table>
+                <thead><tr><th>参数</th><th>说明</th></tr></thead>
+                <tbody>
+                    <tr><td>并发数</td><td>单次模式下同时执行的用例数，建议 3-5；设为 1 即串行执行。多轮模式固定为 1，不支持并发</td></tr>
+                    <tr><td>关键词命中率阈值 (%)</td><td>软断言阈值：命中率达到该值即通过，未命中的关键词只记警告，不直接判失败（默认 60%）</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="modes">
+            <h2>单次 / 多轮对话模式</h2>
+            <p>工具现在把单次对话和多轮对话显式拆开，避免把 <code>question</code> 和 <code>turns[]</code> 混在一起执行。</p>
+
+            <h3>单次对话模式（默认）</h3>
+            <ul>
+                <li>适合批量验证独立问题，例如知识库问答、边界输入、安全问题等。</li>
+                <li>用例使用顶层 <code>question</code> 字段。</li>
+                <li>支持并发执行，按「并发数」配置运行。</li>
+                <li>如果用例里误放了 <code>turns[]</code>，工具会提示；继续运行时只使用 <code>question</code>。</li>
+            </ul>
+
+            <h3>多轮对话模式</h3>
+            <ul>
+                <li>打开 <strong>多轮对话模式</strong> 开关后启用。</li>
+                <li>用例必须使用 <code>turns[]</code>，同一个场景内按第 1 轮、第 2 轮、第 3 轮顺序执行。</li>
+                <li>固定串行执行，并发数会被禁用，避免上下文顺序错乱。</li>
+                <li>失败重跑会重跑整个失败场景，而不是单独重跑某一轮。</li>
+                <li>报告会展示每轮问题、状态、耗时、失败原因和原始响应。</li>
+            </ul>
+
+            <p>多轮 JSON 示例：</p>
+            <pre><code>[
+  {
+    "id": "MT-001",
+    "title": "同一上下文多轮追问",
+    "type": "多轮对话",
+    "priority": "P0",
+    "knowledgeId": null,
+    "conversation": { "mode": "same_context" },
+    "turns": [
+      {
+        "question": "请介绍这份资料的核心内容",
+        "expected": {
+          "status_code": 200,
+          "keywords": ["核心", "内容"],
+          "min_length": 10,
+          "max_time": 50
+        }
+      },
+      {
+        "question": "刚才提到的第二点展开说说",
+        "expected": {
+          "status_code": 200,
+          "keywords": ["第二点"],
+          "min_length": 10,
+          "max_time": 50
+        }
+      },
+      {
+        "question": "总结一下我们刚才聊了什么",
+        "expected": {
+          "status_code": 200,
+          "keywords": ["总结"],
+          "min_length": 10,
+          "max_time": 50
+        }
+      }
+    ],
+    "validation_points": ["多轮问题应保持同一上下文"]
+  }
+]</code></pre>
+            <div class="warn">⚠ 多轮会话是否真的落在同一个产品会话里，取决于被测接口的 <code>conversationId</code> 机制。若响应出现 <code>{"code":7,"msg":"未发现数据"}</code>，通常表示 cURL 中的会话 ID 已失效、被测产品要求先创建会话，或 <code>conversationId 字段路径</code> 配错。</div>
+        </section>
+
+        <section id="step3">
+            <h2>③ 配置 AI 能力（可选）</h2>
+            <p>「AI 断言（裁判模型）」和「AI 生成用例」<strong>共用同一套模型配置</strong>，底层通过 Vercel AI SDK 调用<strong>腾讯云 TokenHub</strong>（OpenAI 兼容）。推荐用服务端 <code>.env</code> 配置，前端三个输入框可全部留空。</p>
+            <h3>方式一（推荐）：服务端 .env</h3>
+            <p>复制 <code>.env.example</code> 为 <code>.env</code>，填入你的 Key：</p>
+            <pre><code>TOKENHUB_API_KEY=sk-your-key-here
+TOKENHUB_BASE_URL=https://tokenhub.tencentmaas.com/v1
+TOKENHUB_MODEL=deepseek-v4-flash</code></pre>
+            <h3>方式二：前端临时填写</h3>
+            <table>
+                <thead><tr><th>字段</th><th>说明</th></tr></thead>
+                <tbody>
+                    <tr><td>Base URL</td><td>留空即使用服务端 <code>.env</code> / <code>judge.config.json</code>；默认 <code>https://tokenhub.tencentmaas.com/v1</code></td></tr>
+                    <tr><td>模型名</td><td>留空即使用服务端 <code>.env</code> / <code>judge.config.json</code>；默认 <code>deepseek-v4-flash</code></td></tr>
+                    <tr><td>API Key</td><td>你的密钥（仅存于浏览器 sessionStorage，关闭标签页即清除）</td></tr>
+                </tbody>
+            </table>
+            <p>填完点 <strong>🔌 测试连接</strong> 验证是否可用。打开顶部开关后，每条用例（多轮场景中每一轮）都会经过 AI 裁判判定。</p>
+            <div class="note">🔐 配置优先级：前端完整填写 API Key 时使用前端配置；若前端没有填写 API Key，则忽略前端 Base URL / 模型名，完全使用服务端 <code>.env</code>（<code>TOKENHUB_*</code>）或 <code>judge.config.json</code>，避免 Key 与 Base URL 错配。</div>
+            <div class="tip">💡 性能提示：开启 AI 断言会因为多一次模型调用而变慢。工具内置了<strong>结果缓存</strong>——相同问题与回答不会重复请求模型，可缓解耗时。</div>
+        </section>
+
+        <section id="step4">
+            <h2>④ 执行测试</h2>
+            <p>点击 <strong>🚀 开始测试</strong>。顶部会出现一条<strong>非阻塞进度条</strong>，显示进度百分比、当前用例 ID，并提供 <strong>⏹ 取消</strong> 按钮，随时可中断。</p>
+            <p>单次模式会按并发数执行；多轮模式固定串行，同一个场景内按 <code>turns[]</code> 顺序请求。执行完成后自动生成报告，并把本次结果保存到历史。</p>
+        </section>
+
+        <section id="step5">
+            <h2>⑤ 看懂报告</h2>
+            <p>报告区顶部是汇总统计（总数 / 通过 / 失败 / 警告等）。每条用例可展开看详情：请求、响应、各断言项的命中情况、AI 判定理由等。</p>
+            <p>详情中有四个 Tab：<strong>请求的 CURL</strong>、<strong>原始数据</strong>、<strong>纯文本</strong>、<strong>Trace</strong>。流式 SSE 响应会被归一化为纯文本用于关键词断言和 AI 裁判；响应内嵌的 trace/debug 数据会被解析成步骤表格用于排查链路。</p>
+            <h3>工具栏</h3>
+            <table>
+                <thead><tr><th>功能</th><th>说明</th></tr></thead>
+                <tbody>
+                    <tr><td>搜索 / 筛选</td><td>按关键字、用例类型、结果（通过 / 失败 / 警告）过滤</td></tr>
+                    <tr><td>展开全部 / 收起全部</td><td>一键展开或折叠所有用例详情</td></tr>
+                    <tr><td>🔁 重跑失败</td><td>只重新执行失败的用例，省时间</td></tr>
+                    <tr><td>⬇ 导出 HTML / CSV</td><td>把当前报告导出存档或分享</td></tr>
+                </tbody>
+            </table>
+            <div class="tip">💡 刷新页面后，工具会自动恢复你最近一次的报告，不会丢。多轮报告会额外展示各轮结果表格。</div>
+        </section>
+
+        <section id="step6">
+            <h2>⑥ 历史与对比</h2>
+            <p>点击 <strong>📚 历史与对比</strong> 查看保存过的历次运行。选择两次运行进行 <strong>🔍 对比</strong>，工具会逐用例列出差异并分类：</p>
+            <table>
+                <thead><tr><th>标记</th><th>含义</th></tr></thead>
+                <tbody>
+                    <tr><td>回归（变坏）</td><td>上次通过、这次失败 —— 重点关注</td></tr>
+                    <tr><td>修复（变好）</td><td>上次失败、这次通过</td></tr>
+                    <tr><td>变化</td><td>状态、关键词命中、内容、性能、AI 判定或 Trace 链路有变化</td></tr>
+                    <tr><td>新增 / 移除</td><td>用例集发生了增删</td></tr>
+                </tbody>
+            </table>
+            <div class="note">对比不同的数据集时会给出提示，因为用例不一致时差异结果仅供参考。</div>
+        </section>
+
+        <section id="assertion">
+            <h2>断言机制说明</h2>
+            <p>一条用例最终是否「通过」，由以下判定共同决定：</p>
+            <ul>
+                <li><strong>状态码 / 长度 / 耗时</strong>：硬性校验，不满足直接失败。</li>
+                <li><strong>关键词</strong>：软断言。命中率 ≥ 阈值即通过；未命中的词会记为<strong>警告</strong>；命中率不足会判失败。</li>
+                <li><strong>AI 裁判</strong>（若开启）：模型给出 <code>pass / score / reason</code>。判不合格则该用例失败，并附上理由。</li>
+                <li><strong>Trace 断言</strong>（若配置）：校验工具调用、步骤顺序和耗时阈值。</li>
+            </ul>
+            <p>断言内容优先使用归一化后的 <code>normalized_content</code>。对于 <code>text/event-stream</code> 流式响应，工具会从 <code>data:</code> 行中提取 <code>content</code> / <code>text</code> / <code>answer</code> / <code>message</code> 等文本字段。</p>
+            <div class="tip">设计取向：尽量减少「措辞不同就误判失败」的噪音，让失败更聚焦在真正的问题上。</div>
+        </section>
+
+        <section id="trace">
+            <h2>Agent Trace 测试</h2>
+            <p>Trace 测试用于验证 Agent 是否走了预期链路，例如是否触发联网搜索、是否按「检索 → 工具调用 → 回答」顺序执行、某个工具是否耗时过长等。它主要解决“答案看起来对，但 Agent 实际有没有调用正确工具”的问题。</p>
+
+            <h3>Trace 数据来源</h3>
+            <p>当前版本只解析<strong>被测接口响应内嵌</strong>的 trace/debug 数据，不额外调用独立 trace 查询接口。工具会先识别严格的 <code>tool_call</code> start/end 事件；如果没有，再从 JSON 或 SSE 的 <code>data:</code> payload 中递归查找这些常见字段作为兼容 fallback：</p>
+            <ul>
+                <li><code>trace</code> / <code>debug.trace</code></li>
+                <li><code>steps</code> / <code>events</code> / <code>spans</code></li>
+                <li><code>tool_calls</code> / <code>toolCalls</code></li>
+            </ul>
+            <h3>真实工具调用链规则</h3>
+            <p>当响应里存在事件流格式的 <code>tool_call</code> start/end 事件时，工具会优先按<strong>真实工具调用链</strong>规则解析：</p>
+            <ul>
+                <li>过滤所有 <code>reasoning_start</code> / <code>reasoning</code> / <code>reasoning_end</code> 模型思考文本，它们只代表预规划，不计入真实调用。</li>
+                <li>过滤 <code>tool_call_intent</code>，它只代表模型准备调用工具的意图。</li>
+                <li>只保留同时具备唯一 <code>toolCallId</code>、<code>tool_call</code> start + end、<code>success=true</code>、<code>latencyMs</code> 和 <code>output</code> 的成功工具调用。</li>
+                <li>按事件时间或出现顺序升序排列，输出标准 <code>filter_explain</code> + <code>real_tool_chain</code> JSON。</li>
+            </ul>
+            <p>Trace Tab 中会展示如下标准 JSON，便于直接复制给程序处理：</p>
+            <pre><code>{
+  "filter_explain": "说明过滤了哪些内容，思考链路和实际调用的差异",
+  "real_tool_chain": [
+    {
+      "sequence": 1,
+      "tool_call_id": "唯一ID",
+      "tool_name": "工具名称",
+      "request_params": "工具入参",
+      "latency_ms": 1234,
+      "execute_status": "success",
+      "result_summary": "返回结果摘要"
+    }
+  ]
+}</code></pre>
+            <div class="note">如果响应里没有内嵌 trace，报告的 Trace Tab 会显示「未发现 trace 数据」。只有用例配置了 <code>expected.trace</code> 时，trace 缺失才会导致失败。</div>
+
+            <h3>Trace 断言格式</h3>
+            <p>在用例的 <code>expected.trace</code> 下配置断言：</p>
+            <pre><code>{
+  "id": "TR-001",
+  "title": "资料不足时应触发联网搜索",
+  "type": "Trace测试",
+  "priority": "P1",
+  "question": "资料不足时请结合联网搜索回答今天的热点新闻",
+  "knowledgeId": null,
+  "expected": {
+    "status_code": 200,
+    "keywords": ["新闻"],
+    "trace": {
+      "required_tools": ["web_search"],
+      "forbidden_tools": [],
+      "required_steps": ["retrieve", "web_search", "answer"],
+      "max_total_time_ms": 15000,
+      "max_tool_time_ms": 8000
+    }
+  }
+}</code></pre>
+            <table>
+                <thead><tr><th>字段</th><th>说明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>required_tools</code></td><td>必须出现的工具名，例如 <code>web_search</code></td></tr>
+                    <tr><td><code>forbidden_tools</code></td><td>不允许出现的工具名，例如某些场景禁止联网</td></tr>
+                    <tr><td><code>required_steps</code></td><td>要求按顺序出现的步骤名，不要求相邻</td></tr>
+                    <tr><td><code>max_total_time_ms</code></td><td>Trace 步骤总耗时上限</td></tr>
+                    <tr><td><code>max_tool_time_ms</code></td><td>单个工具调用耗时上限</td></tr>
+                </tbody>
+            </table>
+
+            <h3>报告与回归</h3>
+            <p>报告详情的 Trace Tab 会显示步骤数、工具集合、总耗时、失败步骤数，以及每一步的名称、类型、状态、耗时、输入/输出摘要。若识别到真实工具调用链，还会额外展示可直接复制解析的标准 JSON。</p>
+            <p>历史报告只保存 trace 摘要，不保存完整 raw trace，避免报告文件过大。历史对比会提示工具增删、步骤序列变化、失败步骤变化、耗时显著变化和 trace hash 变化。</p>
+        </section>
+
+        <section id="reports">
+            <h2>报告管理</h2>
+            <p>每次运行的结果以 JSON 文件保存在服务端 <code>reports/</code> 目录。为避免目录无限增长，工具内置<strong>保留策略</strong>：</p>
+            <ul>
+                <li>默认只保留<strong>最近 50 份</strong>报告，多余的在保存新报告时自动清理。</li>
+                <li>可通过环境变量调整上限：<code>MAX_REPORTS=100 node server.js</code></li>
+            </ul>
+        </section>
+
+        <section id="security">
+            <h2>安全说明</h2>
+            <ul>
+                <li><strong>API Key</strong>：前端填写的密钥仅存于 <code>sessionStorage</code>，关闭标签页即清除，不写入磁盘、不入库。</li>
+                <li><strong>XSS 防护</strong>：报告中所有来自接口 / 模型的内容都做了 HTML 转义后再渲染。</li>
+                <li><strong>私密配置</strong>：<code>judge.config.json</code> 与 <code>reports/</code> 已被 <code>.gitignore</code> 忽略，不会误提交。</li>
+                <li><strong>登录态</strong>：cURL 含账号凭证，请勿把含真实 Cookie 的内容分享给他人。</li>
+            </ul>
+        </section>
+
+        <section id="faq">
+            <h2>常见问题</h2>
+
+            <h3>启动时报 <code>EADDRINUSE</code>（端口被占用）？</h3>
+            <p>说明 5001 端口已有进程在用。先结束旧进程再启动：</p>
+            <pre><code>lsof -ti tcp:5001 | xargs kill -9
+node server.js</code></pre>
+
+            <h3>接口报「无法解析域名 / 连接失败」？</h3>
+            <p>若被测接口是公司内网地址，请确认已连上公司网络或 VPN，并保证运行服务的环境能访问该内网。工具会把常见网络错误翻译成中文提示。</p>
+
+            <h3>开了 AI 断言但没生效？</h3>
+            <p>如果使用服务端 <code>.env</code>，前端 Base URL / 模型名 / API Key 可以全部留空，然后点「测试连接」。如果前端手动填写，则必须保证 Base URL、模型名、API Key 属于同一服务商，避免 TokenHub Key 配到其他 Base URL 上。</p>
+
+            <h3>AI 生成 / 转换用例失败？</h3>
+            <p>生成失败多为模型输出被截断或返回非 JSON，可减少「生成条数」后重试；转换失败如果提示数量不一致，请把自然语言用例改成一行一条，或用 <code>---</code> 分隔长用例。两者都需要确认模型配置可用。</p>
+
+            <h3>遇到 401 / 403？</h3>
+            <p>多为登录态过期。重新获取最新的 cURL（含新 Cookie / Token）再粘贴。报告会给出登录失效提示。</p>
+
+            <h3>AI 断言测试连接提示 API Key 无效？</h3>
+            <p>优先检查 <code>.env</code> 中的 <code>TOKENHUB_API_KEY</code> 是否正确、是否已过期。若你曾在前端填写过其他 Base URL / 模型名，建议清空前端三个输入框并硬刷新页面，让服务端完整接管模型配置。</p>
+
+            <h3>多轮对话返回 <code>{"code":7,"msg":"未发现数据"}</code>？</h3>
+            <p>通常是 <code>conversationId</code> 无效或字段路径不对。工具不会伪造会话 ID；它只会复用 cURL 里已有的真实 ID，或使用首轮响应返回的真实 ID。请检查「请求的 CURL」里的请求体：如果带了旧的 <code>conversationId</code>，请重新从产品里复制当前可用会话的 cURL；如果不该带会话 ID，可把 <strong>conversationId 字段路径</strong> 填成 <code>none</code>。</p>
+
+            <h3>多轮问题没有落在同一个会话？</h3>
+            <p>确认已打开 <strong>多轮对话模式</strong>，用例使用 <code>turns[]</code>，且并发输入已变成「多轮模式固定串行」。然后展开报告看每轮「请求的 CURL」：后续轮次应带同一个真实 <code>conversationId</code>。如果首轮响应没有返回会话 ID，工具无法凭空创建产品侧会话，需要被测接口或原始 cURL 提供有效 ID。</p>
+
+            <h3>Trace Tab 显示「未发现 trace 数据」？</h3>
+            <p>说明被测接口响应中没有内嵌可识别的真实 <code>tool_call</code> start/end 事件，也没有兼容的 <code>trace</code> / <code>debug.trace</code> / <code>steps</code> / <code>tool_calls</code> 等字段。若产品需要通过单独接口查询 trace，当前版本还不会自动调用；可以先让被测接口在响应或 SSE 事件里带上 trace 数据。</p>
+
+            <h3>Trace 断言失败，但原始响应里有 reasoning？</h3>
+            <p><code>reasoning</code> 属于模型思考或预规划，不代表工具真的执行。工具只把成对且成功的 <code>tool_call</code> start/end 事件计入真实工具调用链。若只有 <code>tool_call_intent</code> 或 reasoning 文本，没有成功的 end 事件、<code>latencyMs</code>、<code>output</code>，会被过滤。</p>
+
+            <h3>改了代码但页面还是旧表现？</h3>
+            <p>重启 <code>node server.js</code> 后，用 <span class="kbd">Cmd</span> + <span class="kbd">Shift</span> + <span class="kbd">R</span> 硬刷新页面，确保浏览器重新加载 <code>test_tool.html</code> 和 <code>test_tool.helpers.js</code>。</p>
+        </section>
+
+        <section id="files">
+            <h2>文件结构</h2>
+            <table>
+                <thead><tr><th>文件 / 目录</th><th>作用</th></tr></thead>
+                <tbody>
+                    <tr><td><code>server.js</code></td><td>后端：CORS 代理、报告存储、AI 模型调用</td></tr>
+                    <tr><td><code>test_tool.html</code></td><td>前端单页应用（主界面）</td></tr>
+                    <tr><td><code>test_tool.helpers.js</code></td><td>前端 / Node 共用的辅助函数：用例归一化、多轮会话状态、SSE 文本提取、真实工具调用链提取等</td></tr>
+                    <tr><td><code>test_tool.helpers.test.js</code></td><td>辅助函数回归测试，覆盖单次/多轮、SSE、conversationId、Trace 和真实工具调用链（<code>npm test</code>）</td></tr>
+                    <tr><td><code>使用手册.html</code></td><td>本手册</td></tr>
+                    <tr><td><code>src/llm/tokenhub.mjs</code></td><td>TokenHub 调用封装（Vercel AI SDK）</td></tr>
+                    <tr><td><code>src/llm/smoke.mjs</code></td><td>TokenHub 连通性自测脚本（<code>npm run smoke</code>）</td></tr>
+                    <tr><td><code>.env.example</code></td><td>环境变量模板（复制为 <code>.env</code> 填 Key）</td></tr>
+                    <tr><td><code>package.json</code></td><td>依赖与脚本（<code>npm start</code> / <code>npm test</code> / <code>npm run smoke</code>）</td></tr>
+                    <tr><td><code>judge.config.json</code></td><td>裁判 / 生成模型的私密配置（含 Key，不入库，可选）</td></tr>
+                    <tr><td><code>judge.config.example.json</code></td><td>配置模板示例</td></tr>
+                    <tr><td><code>reports/</code></td><td>历次测试结果（JSON）</td></tr>
+                    <tr><td><code>test_cases/</code></td><td>示例 / 历史测试用例</td></tr>
+                    <tr><td><code>AI_Agent测试方法与实践.md</code></td><td>测试方法论文档</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer>
+            AI Agent 测试工具 · 使用手册 ｜ 本地访问地址：<code>http://localhost:5001/</code>
+        </footer>
+    </main>
+</div>
+</body>
+</html>
