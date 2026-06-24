@@ -81,15 +81,37 @@
         return candidates.find(path => hasPath(body, path)) || 'question';
     }
 
-    function normalizeKnowledgePath(configuredPath) {
+    function normalizeContextPath(body, configuredPath) {
         const normalizedPath = String(configuredPath || '').trim();
-        if (!normalizedPath || normalizedPath.toLowerCase() === 'none') return '';
-        return normalizedPath;
-    }
-
-    function normalizeConversationPath(configuredPath) {
-        const normalizedPath = String(configuredPath || 'conversationId').trim();
-        if (!normalizedPath || normalizedPath.toLowerCase() === 'none') return '';
+        // 空值 / none / auto → 自动检测
+        if (!normalizedPath || normalizedPath.toLowerCase() === 'none' || normalizedPath.toLowerCase() === 'auto') {
+            if (!body || typeof body !== 'object') return '';
+            const candidates = [
+                'conversationId',
+                'conversation_id',
+                'sessionId',
+                'session_id',
+                'chatId',
+                'chat_id'
+            ];
+            for (const key of candidates) {
+                if (hasPath(body, key)) return key;
+            }
+            // 递归搜索嵌套对象
+            function deepSearch(obj, prefix) {
+                if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+                for (const k of Object.keys(obj)) {
+                    const fullKey = prefix ? prefix + '.' + k : k;
+                    if (candidates.some(c => k.toLowerCase() === c.toLowerCase())) return fullKey;
+                    if (obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k])) {
+                        const found = deepSearch(obj[k], fullKey);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+            return deepSearch(body, '') || '';
+        }
         return normalizedPath;
     }
 
@@ -318,18 +340,12 @@
         const body = originalBody && typeof originalBody === 'object' ? originalBody : {};
 
         const questionPath = resolveQuestionPath(body, injectionConfig.questionPath);
-        const knowledgePath = normalizeKnowledgePath(injectionConfig.knowledgePath);
-        const conversationPath = normalizeConversationPath(injectionConfig.conversationPath);
+        const contextPath = normalizeContextPath(body, injectionConfig.contextPath);
 
         setPath(body, questionPath, turn.question);
 
-        const knowledgeId = turn.knowledgeId != null ? turn.knowledgeId : scenario.knowledgeId;
-        if (knowledgePath && knowledgeId && !isPlaceholderKnowledgeId(knowledgeId)) {
-            setPath(body, knowledgePath, knowledgeId);
-        }
-
-        if (conversationPath && sessionState && sessionState.conversationId != null && sessionState.conversationId !== '') {
-            setPath(body, conversationPath, sessionState.conversationId);
+        if (contextPath && sessionState && sessionState.conversationId != null && sessionState.conversationId !== '') {
+            setPath(body, contextPath, sessionState.conversationId);
         }
 
         return body;
@@ -339,8 +355,8 @@
         const body = typeof parsedCurl.body === 'object' && parsedCurl.body !== null
             ? parsedCurl.body
             : {};
-        const conversationPath = normalizeConversationPath(injectionConfig.conversationPath);
-        const conversationId = conversationPath ? getPath(body, conversationPath) : undefined;
+        const contextPath = normalizeContextPath(body, injectionConfig.contextPath);
+        const conversationId = contextPath ? getPath(body, contextPath) : undefined;
         return {
             conversationId: conversationId == null || conversationId === '' ? '' : String(conversationId),
             turnIndex: 0
@@ -912,8 +928,7 @@
         getPath,
         setPath,
         resolveQuestionPath,
-        normalizeKnowledgePath,
-        normalizeConversationPath,
+        normalizeContextPath,
         isPlaceholderKnowledgeId,
         normalizeTurn,
         normalizeScenario,

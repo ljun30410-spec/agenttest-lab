@@ -907,6 +907,193 @@
         #filter-search { min-width: 200px; }
         .toolbar-spacer { flex: 1; }
 
+        /* === 实时解析状态提示 === */
+        .parse-status {
+            font-size: 0.85em;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        .parse-status.ok {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .parse-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .parse-status.warn {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .parse-status.empty {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e9ecef;
+        }
+        .parse-status .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.82em;
+            margin: 0 2px;
+            background: rgba(0,0,0,0.08);
+        }
+
+        /* === 字段自动检测按钮 === */
+        .detect-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #fff;
+            color: #667eea;
+            border: 1px solid #c7ccf5;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .detect-btn:hover { background: #f0f1ff; }
+        .detect-result {
+            display: none;
+            margin-top: 6px;
+            font-size: 0.82em;
+            color: #6c757d;
+            line-height: 1.7;
+        }
+        .detect-result.show { display: block; }
+        .detect-result a {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* === 失败汇总 === */
+        .failure-summary {
+            margin-bottom: 20px;
+            padding: 16px 18px;
+            border-radius: 8px;
+            background: #fff5f5;
+            border-left: 4px solid #dc3545;
+            display: none;
+        }
+        .failure-summary.show { display: block; }
+        .failure-summary h3 {
+            color: #c62828;
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+        .failure-summary .fs-item {
+            padding: 6px 0;
+            font-size: 0.9em;
+            color: #721c24;
+            border-bottom: 1px solid rgba(220,53,69,0.12);
+        }
+        .failure-summary .fs-item:last-child { border-bottom: none; }
+        .failure-summary .fs-case-id {
+            font-weight: 700;
+            color: #c62828;
+        }
+
+        /* === 暗色模式切换按钮 === */
+        .theme-toggle {
+            position: fixed;
+            top: 16px;
+            right: 20px;
+            z-index: 2000;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.05);
+        }
+
+        /* === 暗色模式 === */
+        html[data-theme="dark"] body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #d9e2f1;
+        }
+        html[data-theme="dark"] .header h1,
+        html[data-theme="dark"] .header p { color: #d9e2f1; text-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+        html[data-theme="dark"] .section-card {
+            background: #1e293b;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        }
+        html[data-theme="dark"] .section-card h2 { color: #e2e8f0; }
+        html[data-theme="dark"] .form-group label { color: #cbd5e1; }
+        html[data-theme="dark"] .form-group textarea,
+        html[data-theme="dark"] .form-group input {
+            background: #0f172a;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        html[data-theme="dark"] .form-group textarea:focus,
+        html[data-theme="dark"] .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        html[data-theme="dark"] .form-group textarea::placeholder,
+        html[data-theme="dark"] .form-group input::placeholder { color: #64748b; }
+        html[data-theme="dark"] .results-section { background: #1e293b; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+        html[data-theme="dark"] .results-header { background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%); }
+        html[data-theme="dark"] .test-item { border-color: #334155; }
+        html[data-theme="dark"] .test-header { background: #162032; }
+        html[data-theme="dark"] .test-id { color: #e2e8f0; }
+        html[data-theme="dark"] .test-body { color: #cbd5e1; }
+        html[data-theme="dark"] .test-question { background: #162032; color: #cbd5e1; }
+        html[data-theme="dark"] .metric { background: #162032; }
+        html[data-theme="dark"] .metric-label { color: #94a3b8; }
+        html[data-theme="dark"] .metric-value { color: #e2e8f0; }
+        html[data-theme="dark"] .stat-card { background: #162032; }
+        html[data-theme="dark"] .stat-card .label { color: #94a3b8; }
+        html[data-theme="dark"] .stat-card .value { color: #667eea; }
+        html[data-theme="dark"] .tab-btn { background: #162032; color: #94a3b8; }
+        html[data-theme="dark"] .tab-btn.active { background: #1e293b; color: #818cf8; border-color: #334155; border-bottom-color: #1e293b; }
+        html[data-theme="dark"] .tab-content { background: #162032; border-color: #334155; }
+        html[data-theme="dark"] .response-pre { background: #0f172a; color: #e2e8f0; }
+        html[data-theme="dark"] .btn-secondary { background: #1e293b; border-color: #667eea; }
+        html[data-theme="dark"] .btn-ghost { background: #1e293b !important; color: #818cf8 !important; border-color: #475569 !important; }
+        html[data-theme="dark"] .btn-ghost:hover { background: #2d3a50 !important; }
+        html[data-theme="dark"] .ai-gen-box { background: #162032; border-color: #475569; }
+        html[data-theme="dark"] .empty-state { color: #94a3b8; }
+        html[data-theme="dark"] .results-toolbar { background: #162032; border-color: #334155; }
+        html[data-theme="dark"] .toolbar-input { background: #0f172a; border-color: #334155; color: #e2e8f0; }
+        html[data-theme="dark"] .diff-card { background: #162032; border-left-color: #667eea; }
+        html[data-theme="dark"] .diff-card .label { color: #94a3b8; }
+        html[data-theme="dark"] .diff-card .value { color: #e2e8f0; }
+        html[data-theme="dark"] .history-table th { background: #162032; color: #e2e8f0; }
+        html[data-theme="dark"] .history-table td { border-color: #334155; }
+        html[data-theme="dark"] .history-table tr:hover td { background: #253548; }
+        html[data-theme="dark"] .diff-table th { background: #162032; color: #e2e8f0; }
+        html[data-theme="dark"] .diff-table td { border-color: #334155; }
+        html[data-theme="dark"] .parse-status.empty { background: #162032; color: #94a3b8; border-color: #334155; }
+        html[data-theme="dark"] .pb-cancel { background: #1e293b; }
+        html[data-theme="dark"] .progress-bar { background: #1e293b; box-shadow: 0 2px 10px rgba(0,0,0,0.35); }
+        html[data-theme="dark"] .pb-row { color: #cbd5e1; }
+        html[data-theme="dark"] .theme-toggle { background: rgba(30,41,59,0.8); border-color: rgba(102,126,234,0.4); }
+        html[data-theme="dark"] .test-type { background: #2d3a50; color: #94a3b8; }
+        html[data-theme="dark"] .expand-btn { background: #2d3a50; color: #cbd5e1; }
+        html[data-theme="dark"] .expand-btn:hover { background: #3d4f6c; }
+        html[data-theme="dark"] .loading-content { background: #1e293b; color: #e2e8f0; }
+        html[data-theme="dark"] .loading-content p { color: #cbd5e1; }
+        html[data-theme="dark"] .loading-spinner { border-color: #334155; border-top-color: #667eea; }
+        html[data-theme="dark"] .detect-btn { background: #1e293b; border-color: #475569; }
+        html[data-theme="dark"] .detect-btn:hover { background: #2d3a50; }
+
         @media (max-width: 768px) {
             .input-section {
                 grid-template-columns: 1fr;
@@ -924,6 +1111,7 @@
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="切换暗色/亮色模式">🌙 暗色模式</button>
     <div class="container">
         <div class="header">
             <h1>AgentTest Lab</h1>
@@ -936,19 +1124,21 @@
                 <div class="form-group">
                     <label for="curl-input">Curl 命令 <span class="help" data-tip="支持完整的 curl 命令格式，包含 headers 和 body">?</span></label>
                     <textarea id="curl-input" placeholder="请登录您的账号发送一条正常的接口请求，鼠标右键复制该接口的 CURL 命令，粘贴到此处，数据请求会以该账号进行发送，过程中请尽量不要用该账号手动发送AI请求。"></textarea>
+                    <div class="parse-status empty" id="curl-status">等待输入 curl 命令…</div>
                 </div>
                 <div class="config-grid">
                     <div class="form-group">
                         <label for="question-path-input">问题字段路径 <span class="help" data-tip="填写测试问题写入位置；auto 会优先识别 message.content、question、query 等">?</span></label>
-                        <input class="field-path-input" id="question-path-input" type="text" value="auto" placeholder="auto 或 message.content">
+                        <div style="display:flex; gap:8px;">
+                            <input class="field-path-input" id="question-path-input" type="text" value="auto" placeholder="auto 或 message.content" style="flex:1;">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="knowledge-path-input">knowledgeId 字段路径 <span class="help" data-tip="不需要知识库字段时留空或填 none；支持嵌套路径，如 message.extraData.knowledgeId">?</span></label>
-                        <input class="field-path-input" id="knowledge-path-input" type="text" value="knowledgeId" placeholder="knowledgeId，可留空">
-                    </div>
-                    <div class="form-group" id="conversation-path-group" style="display:none;">
-                        <label for="conversation-path-input">conversationId 字段路径 <span class="help" data-tip="多轮会话 ID 写入位置；同一多轮场景内各轮共用此 ID">?</span></label>
-                        <input class="field-path-input" id="conversation-path-input" type="text" value="conversationId" placeholder="conversationId">
+                    <div class="form-group" id="context-path-group" style="display:none;">
+                        <label for="context-path-input">同一上下文字段路径 <span class="help" data-tip="多轮追问时写入同一会话ID的位置；默认自动检测，支持嵌套路径如 message.conversationId">?</span></label>
+                        <div style="display:flex; gap:8px;">
+                            <input class="field-path-input" id="context-path-input" type="text" value="auto" placeholder="auto 或 message.conversationId" style="flex:1;">
+                            <button class="detect-btn" onclick="autoDetectContextPath()" title="自动从 curl body 分析同一上下文字段" style="flex-shrink:0;">🔍 检测</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -968,6 +1158,7 @@
                         <span id="dataset-file-name" class="file-name"></span>
                     </div>
                     <textarea id="dataset-input" placeholder="请输入测试用例，支持 json 格式与表格格式的 MD 格式"></textarea>
+                    <div class="parse-status empty" id="dataset-status">等待输入数据集…</div>
                 </div>
 
                 <div class="ai-gen-box">
@@ -1009,7 +1200,7 @@
                         <input type="checkbox" id="multi-turn-mode-toggle">
                         <span class="slider"></span>
                     </label>
-                    <span>多轮对话模式 <span class="help" data-tip="开启后按 turns[] 顺序执行同一 conversationId 下的多轮追问；固定串行，不支持并发">?</span></span>
+                    <span>多轮对话模式 <span class="help" data-tip="开启后按 turns[] 顺序在同一上下文中执行多轮追问；固定串行，不支持并发">?</span></span>
                     <span id="dialogue-mode-hint" class="file-name" style="margin-left: 8px;">当前：单次对话（支持并发）</span>
                 </div>
 
@@ -1108,6 +1299,10 @@
                 <button class="btn btn-small" onclick="exportReportCsv()">⬇ 导出 CSV</button>
             </div>
             <div class="report-content" id="report-content">
+                <div class="failure-summary" id="failure-summary">
+                    <h3>❌ 失败用例汇总</h3>
+                    <div id="failure-summary-list"></div>
+                </div>
                 <div class="empty-state">
                     <div>📊</div>
                     <p>点击「开始测试」按钮执行测试</p>
@@ -1233,6 +1428,7 @@
             const textarea = document.getElementById('dataset-input');
             if (!textarea) return;
             textarea.value = JSON.stringify(getExampleDataset(mode), null, 2);
+            updateDatasetStatus();
         }
 
         function updateDialogueModeUI() {
@@ -1240,7 +1436,7 @@
             const concurrencyInput = document.getElementById('concurrency-input');
             const concurrencyHint = document.getElementById('concurrency-hint');
             const modeHint = document.getElementById('dialogue-mode-hint');
-            const conversationGroup = document.getElementById('conversation-path-group');
+            const contextGroup = document.getElementById('context-path-group');
 
             if (concurrencyInput) {
                 concurrencyInput.disabled = multi;
@@ -1252,8 +1448,8 @@
             if (modeHint) {
                 modeHint.textContent = multi ? '当前：多轮对话（固定串行）' : '当前：单次对话（支持并发）';
             }
-            if (conversationGroup) {
-                conversationGroup.style.display = multi ? '' : 'none';
+            if (contextGroup) {
+                contextGroup.style.display = multi ? '' : 'none';
             }
         }
 
@@ -1285,6 +1481,10 @@
             persistDialogueMode();
             updateDialogueModeUI();
             applyExampleDataset(mode);
+            // 多轮模式下自动检测同一上下文字段
+            if (toggle.checked) {
+                autoDetectContextPath();
+            }
         }
 
         function tokenizeCurlCommand(curlCommand) {
@@ -1547,20 +1747,10 @@
             return candidates.find(path => hasPath(body, path)) || 'question';
         }
 
-        function normalizeKnowledgePath(configuredPath) {
-            const normalizedPath = String(configuredPath || '').trim();
-            if (!normalizedPath || normalizedPath.toLowerCase() === 'none') {
-                return '';
-            }
-
-            return normalizedPath;
-        }
-
         function getInjectionConfig() {
             return {
                 questionPath: document.getElementById('question-path-input')?.value || 'auto',
-                knowledgePath: document.getElementById('knowledge-path-input')?.value || 'knowledgeId',
-                conversationPath: document.getElementById('conversation-path-input')?.value || 'conversationId'
+                contextPath: document.getElementById('context-path-input')?.value || 'auto'
             };
         }
 
@@ -2105,6 +2295,7 @@
             } catch (err) {
                 setFileName(`导入失败：${err.message}`, 'error');
             }
+            updateDatasetStatus();
         }
 
         // ===== AI 转换 / 生成用例 =====
@@ -2148,6 +2339,7 @@
                 document.getElementById('dataset-input').value = JSON.stringify(data.cases, null, 2);
                 const inputCount = data.inputCount || data.cases.length;
                 setConvertStatus(`✓ 已按 ${inputCount} 条输入转换为 ${data.cases.length} 条标准用例，并填入文本框`, 'ok');
+                updateDatasetStatus();
             } catch (e) {
                 setConvertStatus('✗ 请求失败：' + e.message, 'error');
             } finally {
@@ -3265,6 +3457,9 @@
             document.getElementById('report-content').innerHTML = html;
             document.getElementById('results').style.display = 'block';
 
+            // 渲染失败原因汇总
+            renderFailureSummary(results);
+
             setupResultToolbar(results);
 
             // 滚动到结果区域
@@ -3921,6 +4116,16 @@ tr.p{background:#f6fdf8}
 
         // 示例数据
         document.addEventListener('DOMContentLoaded', function() {
+            // 恢复暗色模式
+            restoreTheme();
+
+            // Curl 实时解析监听
+            const curlInput = document.getElementById('curl-input');
+            if (curlInput) curlInput.addEventListener('input', updateCurlStatus);
+
+            // 数据集实时解析监听
+            const datasetInput = document.getElementById('dataset-input');
+            if (datasetInput) datasetInput.addEventListener('input', updateDatasetStatus);
             // 恢复裁判模型配置并检测状态
             loadJudgeConfig();
             refreshJudgeStatus();
@@ -3965,6 +4170,174 @@ tr.p{background:#f6fdf8}
             }
             applyExampleDataset(getDialogueMode());
         });
+
+        // ===== 暗色模式 =====
+        const THEME_LS = 'ai_test_theme';
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            const btn = document.getElementById('theme-toggle');
+            if (isDark) {
+                html.removeAttribute('data-theme');
+                if (btn) btn.innerHTML = '🌙 暗色模式';
+                localStorage.setItem(THEME_LS, 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                if (btn) btn.innerHTML = '☀️ 亮色模式';
+                localStorage.setItem(THEME_LS, 'dark');
+            }
+        }
+        function restoreTheme() {
+            const saved = localStorage.getItem(THEME_LS);
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const btn = document.getElementById('theme-toggle');
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if (btn) btn.innerHTML = '☀️ 亮色模式';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                if (btn) btn.innerHTML = '🌙 暗色模式';
+            }
+        }
+
+        // ===== Curl 实时解析状态 =====
+        function updateCurlStatus() {
+            const statusEl = document.getElementById('curl-status');
+            if (!statusEl) return;
+            const input = document.getElementById('curl-input').value.trim();
+            if (!input) {
+                statusEl.className = 'parse-status empty';
+                statusEl.innerHTML = '等待输入 curl 命令…';
+                return;
+            }
+            try {
+                const parsed = parseCurl(input);
+                if (!parsed.url) {
+                    statusEl.className = 'parse-status warn';
+                    statusEl.innerHTML = '⚠️ 未识别到 URL，请检查 curl 格式';
+                    return;
+                }
+                const method = parsed.method || 'GET';
+                const hdrCount = Object.keys(parsed.headers).length;
+                const authHeaders = Object.keys(parsed.headers).filter(k =>
+                    /authorization|auth|cookie|x-api-key|token/i.test(k)
+                );
+                const hasBody = parsed.body ? (typeof parsed.body === 'object' ? 'JSON' : 'String') : '无';
+                const urlShort = parsed.url.length > 60 ? parsed.url.slice(0, 60) + '…' : parsed.url;
+                statusEl.className = 'parse-status ok';
+                let authWarn = '';
+                if (authHeaders.length > 0) {
+                    authWarn = ` <span class="tag" style="background:#fff3cd;color:#856404;">含认证信息: ${authHeaders.join(', ')}</span>`;
+                }
+                statusEl.innerHTML = `✅ <strong>${escapeHtml(method)}</strong> ${escapeHtml(urlShort)} | Headers: ${hdrCount} | Body: ${hasBody}${authWarn}`;
+            } catch (e) {
+                statusEl.className = 'parse-status error';
+                statusEl.innerHTML = '❌ 解析失败: ' + escapeHtml(e.message);
+            }
+        }
+
+        // ===== 数据集实时解析状态 =====
+        function updateDatasetStatus() {
+            const statusEl = document.getElementById('dataset-status');
+            if (!statusEl) return;
+            const input = document.getElementById('dataset-input').value.trim();
+            if (!input) {
+                statusEl.className = 'parse-status empty';
+                statusEl.innerHTML = '等待输入数据集…';
+                return;
+            }
+            try {
+                const cases = parseRawDataset(input);
+                if (!Array.isArray(cases) || cases.length === 0) {
+                    statusEl.className = 'parse-status warn';
+                    statusEl.innerHTML = '⚠️ 未能解析到用例，请检查格式（JSON数组 或 Markdown表格）';
+                    return;
+                }
+                const typeCount = {};
+                cases.forEach(c => {
+                    const t = (c.type || '功能测试').trim();
+                    typeCount[t] = (typeCount[t] || 0) + 1;
+                });
+                const typeTags = Object.entries(typeCount).map(([t, n]) =>
+                    `<span class="tag">${escapeHtml(t)}: ${n}条</span>`
+                ).join(' ');
+                const hasTurns = cases.some(c => Array.isArray(c.turns) && c.turns.length > 0);
+                const multiHint = hasTurns ? ' <span class="tag" style="background:#d4edda;color:#155724;">含多轮用例</span>' : '';
+                const hasTrace = cases.some(c => c.expected && c.expected.trace);
+                const traceHint = hasTrace ? ' <span class="tag" style="background:#cfe2ff;color:#084298;">含Trace断言</span>' : '';
+                statusEl.className = 'parse-status ok';
+                statusEl.innerHTML = `✅ 已解析 <strong>${cases.length}</strong> 条用例 ${typeTags}${multiHint}${traceHint}`;
+            } catch (e) {
+                statusEl.className = 'parse-status error';
+                statusEl.innerHTML = '❌ 解析失败: ' + escapeHtml(e.message);
+            }
+        }
+
+        // ===== 自动检测同一上下文字段路径 =====
+        function autoDetectContextPath() {
+            const input = document.getElementById('context-path-input');
+            const curlInput = document.getElementById('curl-input').value.trim();
+            if (!input || !curlInput) return;
+            try {
+                const parsed = parseCurl(curlInput);
+                const body = parsed.body;
+                if (!body || typeof body !== 'object') { input.value = 'auto'; return; }
+                function scanPaths(obj, prefix) {
+                    const paths = [];
+                    if (!obj || typeof obj !== 'object') return paths;
+                    for (const key of Object.keys(obj)) {
+                        const fullPath = prefix ? prefix + '.' + key : key;
+                        paths.push(fullPath);
+                        if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+                            paths.push(...scanPaths(obj[key], fullPath));
+                        }
+                    }
+                    return paths;
+                }
+                const allPaths = scanPaths(body, '');
+                const match = allPaths.find(p =>
+                    /conversation|conversationId|session|sessionId|chat_id|conversation_id/i.test(p)
+                );
+                if (match) {
+                    input.value = match;
+                    input.style.borderColor = '#28a745';
+                    setTimeout(() => { input.style.borderColor = ''; }, 2000);
+                } else {
+                    input.value = 'auto';
+                }
+            } catch (e) {
+                input.value = 'auto';
+            }
+        }
+
+        // ===== 失败原因汇总（在 generateReport 中调用）=====
+        function renderFailureSummary(results) {
+            const failedResults = results.filter(r => !r.passed);
+            const summaryEl = document.getElementById('failure-summary');
+            const listEl = document.getElementById('failure-summary-list');
+            if (!summaryEl || !listEl) return;
+
+            if (failedResults.length === 0) {
+                summaryEl.className = 'failure-summary';
+                listEl.innerHTML = '';
+                return;
+            }
+
+            summaryEl.className = 'failure-summary show';
+            let html = '';
+            failedResults.forEach(r => {
+                const reasons = [];
+                if (r.failures && r.failures.length > 0) reasons.push(...r.failures);
+                if (!r.success && r.error) reasons.push(r.error);
+                const reasonText = reasons.length > 0
+                    ? reasons.slice(0, 2).join('；')
+                    : '未获取到具体失败原因';
+                html += `<div class="fs-item"><span class="fs-case-id">${escapeHtml(String(r.id || ''))}</span> <span style="color:#6c757d;">[${escapeHtml(String(r.type || ''))}]</span> — ${escapeHtml(reasonText)}`;
+                if (reasons.length > 2) html += ` <span style="color:#6c757d;">（+${reasons.length - 2}条）</span>`;
+                html += '</div>';
+            });
+            listEl.innerHTML = html;
+        }
     </script>
 </body>
 </html>
