@@ -218,7 +218,7 @@
         <a href="#intro">工具简介</a>
         <a href="#why">解决什么问题</a>
         <a href="#quickstart">快速开始</a>
-        <h3>使用</h3>
+        <h3>AgentTest Lab</h3>
         <a href="#overview">界面总览</a>
         <a href="#step1">① 配置接口</a>
         <a href="#step2">② 准备用例</a>
@@ -227,6 +227,10 @@
         <a href="#step4">④ 执行测试</a>
         <a href="#step5">⑤ 看懂报告</a>
         <a href="#step6">⑥ 历史与对比</a>
+        <h3>Prompt Diff Lab</h3>
+        <a href="#prompt-diff">Prompt Diff 简介</a>
+        <a href="#prompt-diff-use">使用步骤</a>
+        <a href="#prompt-diff-report">看懂对比报告</a>
         <h3>进阶</h3>
         <a href="#assertion">断言机制说明</a>
         <a href="#trace">Agent Trace 测试</a>
@@ -239,28 +243,44 @@
     <main class="content">
         <div class="hero">
             <h1>AgentTest Lab</h1>
-            <p>面向「AI 问答 / Agent」类系统的轻量级批量测试工具，覆盖「输入 → 执行 → 断言 → 报告 → 回归对比」完整闭环。</p>
+            <p>面向「AI 问答 / Agent」类系统的轻量级测试平台，包含 <strong>AgentTest Lab</strong>（接口回归）与 <strong>Prompt Diff Lab</strong>（Prompt A/B 对比）两个工具。</p>
             <div class="badges">
+                <span class="badge">Agent API 回归</span>
+                <span class="badge">Prompt A/B 对比</span>
                 <span class="badge">批量执行 + 并发</span>
                 <span class="badge">单次 / 多轮对话</span>
-                <span class="badge">关键词软断言</span>
                 <span class="badge">AI 裁判断言</span>
                 <span class="badge">Agent Trace 测试</span>
-                <span class="badge">AI 生成用例</span>
+                <span class="badge">AI 生成 / 转换用例</span>
                 <span class="badge">历史对比 / 回归</span>
-                <span class="badge">报告导出</span>
             </div>
         </div>
 
         <section id="intro">
             <h2>工具简介</h2>
-            <p>这是一个本地运行的网页工具，用来对 AI 问答 / Agent 接口做<strong>批量回归测试</strong>。你只需要把一条真实接口的 cURL 命令和一批测试用例丢进去，它会自动逐条发送请求、校验回答、生成可视化报告，并支持与历史结果对比，快速发现「这次改动让哪些用例变好 / 变坏了」。</p>
+            <p>这是一套本地运行的网页工具，覆盖 AI 应用测试的两个关键环节：</p>
+            <table>
+                <thead><tr><th>工具</th><th>地址</th><th>测什么</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>AgentTest Lab</strong></td><td><code>/</code></td><td>对已部署的 Agent API 做批量回归：curl + 断言 + Trace 工具链</td></tr>
+                    <tr><td><strong>Prompt Diff Lab</strong></td><td><code>/prompt_diff.html</code></td><td>对同一批问题做 A/B Prompt（及模型）对比，评估迭代效果</td></tr>
+                </tbody>
+            </table>
+            <div class="card">
+                <p style="margin:0;">推荐工作流：</p>
+                <ul style="margin:8px 0 0;">
+                    <li><strong>Prompt 迭代阶段</strong> → 用 Prompt Diff Lab 快速对比两套 Prompt</li>
+                    <li><strong>Prompt 定稿、接入 Agent</strong> → 用 AgentTest Lab 测真实接口与工具链</li>
+                    <li><strong>发版 / 改代码后</strong> → AgentTest Lab 全量回归，与历史报告对比</li>
+                </ul>
+            </div>
             <div class="card">
                 <p style="margin:0;">技术构成非常轻量：</p>
                 <ul style="margin:8px 0 0;">
-                    <li><strong>后端</strong>：<code>server.js</code>，充当 CORS 代理、报告存储、AI 模型调用和静态文件服务。</li>
-                    <li><strong>前端</strong>：<code>test_tool.html</code> + <code>test_tool.helpers.js</code>，纯原生 JS，无需构建。</li>
+                    <li><strong>后端</strong>：<code>server.js</code>，CORS 代理、报告存储、AI 模型调用、Prompt Diff API。</li>
+                    <li><strong>前端</strong>：<code>test_tool.html</code>、<code>prompt_diff.html</code> + <code>test_tool.helpers.js</code>，纯原生 JS，无需构建。</li>
                     <li><strong>AI 能力</strong>：通过 Vercel AI SDK 调用 OpenAI 兼容模型，默认面向腾讯云 TokenHub。</li>
+                    <li><strong>状态保留</strong>：两页顶部可互相切换；表单输入与最近报告在页面切换后自动恢复。</li>
                 </ul>
             </div>
         </section>
@@ -297,7 +317,15 @@ node server.js</code></pre>
                 </li>
                 <li>
                     <h3 style="margin-top:0;">打开页面</h3>
-                    <p>浏览器访问 <code>http://localhost:5001/</code> 即可开始使用。</p>
+                    <table>
+                        <thead><tr><th>工具</th><th>地址</th></tr></thead>
+                        <tbody>
+                            <tr><td>AgentTest Lab（接口回归）</td><td><code>http://localhost:5001/</code></td></tr>
+                            <tr><td>Prompt Diff Lab（Prompt 对比）</td><td><code>http://localhost:5001/prompt_diff.html</code></td></tr>
+                            <tr><td>本使用手册</td><td><code>http://localhost:5001/使用手册.html</code></td></tr>
+                        </tbody>
+                    </table>
+                    <p>两个工具页面顶部有导航栏，可随时切换；切换后已填写的内容和最近报告会自动恢复。</p>
                 </li>
             </ol>
         </section>
@@ -459,7 +487,7 @@ node server.js</code></pre>
 
         <section id="step3">
             <h2>③ 配置 AI 能力（可选）</h2>
-            <p>「AI 断言（裁判模型）」和「AI 生成用例」<strong>共用同一套模型配置</strong>，底层通过 Vercel AI SDK 调用<strong>腾讯云 TokenHub</strong>（OpenAI 兼容）。推荐用服务端 <code>.env</code> 配置，前端三个输入框可全部留空。</p>
+            <p>「AI 断言（裁判模型）」、「AI 生成 / 转换用例」和 <strong>Prompt Diff Lab</strong> <strong>共用同一套模型配置</strong>，底层通过 Vercel AI SDK 调用<strong>腾讯云 TokenHub</strong>（OpenAI 兼容）。推荐用服务端 <code>.env</code> 配置，前端三个输入框可全部留空。</p>
             <h3>方式一（推荐）：服务端 .env</h3>
             <p>复制 <code>.env.example</code> 为 <code>.env</code>，填入你的 Key：</p>
             <pre><code>TOKENHUB_API_KEY=sk-your-key-here
@@ -515,6 +543,74 @@ TOKENHUB_MODEL=deepseek-v4-flash</code></pre>
                 </tbody>
             </table>
             <div class="note">对比不同的数据集时会给出提示，因为用例不一致时差异结果仅供参考。</div>
+            <div class="tip">💡 页面顶部的导航可在 AgentTest Lab 与 Prompt Diff Lab 之间切换；curl、用例、Prompt 配置和最近报告都会保留，无需重新填写。</div>
+        </section>
+
+        <section id="prompt-diff">
+            <h2>Prompt Diff Lab 简介</h2>
+            <p>Prompt Diff Lab 用于在 <strong>不经过 Agent 接口</strong> 的情况下，直接对 LLM 跑 A/B 对比，专门评估 System Prompt 或模型变更后的回答质量。</p>
+            <p>访问地址：<code>http://localhost:5001/prompt_diff.html</code>，或在 AgentTest Lab 页面顶部点击 <strong>Prompt Diff Lab</strong> 切换。</p>
+            <table>
+                <thead><tr><th>对比维度</th><th>说明</th></tr></thead>
+                <tbody>
+                    <tr><td>并排回答</td><td>同一问题下 A/B 两版回答左右对照</td></tr>
+                    <tr><td>通过率</td><td>启用 AI 裁判后，A/B 各自 pass 率</td></tr>
+                    <tr><td>均分</td><td>AI 裁判 0–100 分均值及 B 胜场数</td></tr>
+                    <tr><td>关键词命中</td><td>JSON 用例带 <code>keywords</code> 时统计命中率</td></tr>
+                    <tr><td>耗时 / 字数</td><td>每条回答的响应耗时与字符数</td></tr>
+                </tbody>
+            </table>
+            <div class="note">Prompt Diff Lab 与 AgentTest Lab 的 AI 断言共用同一套模型配置（<code>.env</code> / <code>judge.config.json</code> / 前端临时 Key）。</div>
+        </section>
+
+        <section id="prompt-diff-use">
+            <h2>Prompt Diff Lab 使用步骤</h2>
+            <ol class="steps">
+                <li>
+                    <h3 style="margin-top:0;">配置模型</h3>
+                    <p>推荐在服务端 <code>.env</code> 配置 <code>TOKENHUB_API_KEY</code>，前端 Key 可留空。也可在前端临时填写 Base URL / API Key / 默认模型。</p>
+                </li>
+                <li>
+                    <h3 style="margin-top:0;">填写测试问题</h3>
+                    <p>支持两种方式：</p>
+                    <ul>
+                        <li><strong>纯文本</strong>：一行一条，或用 <code>---</code> 分隔较长问题</li>
+                        <li><strong>JSON 数组</strong>：可带 <code>keywords</code> 用于关键词命中率统计</li>
+                    </ul>
+                    <pre><code>[
+  { "question": "什么是机器学习？", "keywords": ["学习", "数据"] },
+  { "question": "把「今天天气不错」翻译成英文。" }
+]</code></pre>
+                </li>
+                <li>
+                    <h3 style="margin-top:0;">配置 A / B 版本</h3>
+                    <p><strong>版本 A（基线）</strong>：当前线上或上一版 System Prompt，可选指定模型。<br>
+                    <strong>版本 B（候选）</strong>：待评估的新 Prompt，也可换模型做对比。</p>
+                    <p>模型留空则使用「默认模型」配置。</p>
+                </li>
+                <li>
+                    <h3 style="margin-top:0;">开始对比</h3>
+                    <p>勾选「启用 AI 裁判」可对每条回答做语义评分（更慢但更全面）。点击 <strong>开始对比</strong>，工具会对每个问题分别跑 A 和 B 各一次。</p>
+                    <div class="tip">💡 可点 <strong>加载示例</strong> 快速体验：3 条问题 + 简短 vs 详细两套 Prompt。</div>
+                </li>
+            </ol>
+        </section>
+
+        <section id="prompt-diff-report">
+            <h2>Prompt Diff Lab 看懂对比报告</h2>
+            <p>对比完成后，页面展示汇总指标与逐题表格：</p>
+            <table>
+                <thead><tr><th>汇总指标</th><th>含义</th></tr></thead>
+                <tbody>
+                    <tr><td>A / B 通过率</td><td>启用 AI 裁判时，各自 pass 的题数占比</td></tr>
+                    <tr><td>A / B 均分</td><td>AI 裁判分数均值</td></tr>
+                    <tr><td>A / B 关键词命中</td><td>期望关键词在回答中的平均命中率</td></tr>
+                    <tr><td>B 胜场</td><td>按裁判分数 B 高于 A 的题数</td></tr>
+                </tbody>
+            </table>
+            <p>逐题表格中，「对比」列会标出 <strong>A 更优</strong>、<strong>B 更优</strong>、<strong>平局</strong>，或按字数差异提示「A/B 更长」。</p>
+            <p>报告自动保存为 <code>reports/prompt-diff-{timestamp}.json</code>，受与 AgentTest Lab 相同的报告保留策略管理（默认最近 50 份）。</p>
+            <div class="warn">⚠ Prompt Diff 测的是「模型直接回答」，不包含 Agent 的工具调用、知识库检索等环节。Prompt 定稿后，仍需用 AgentTest Lab 对真实接口做回归。</div>
         </section>
 
         <section id="assertion">
@@ -616,8 +712,9 @@ TOKENHUB_MODEL=deepseek-v4-flash</code></pre>
             <h2>安全说明</h2>
             <ul>
                 <li><strong>API Key</strong>：前端填写的密钥仅存于 <code>sessionStorage</code>，关闭标签页即清除，不写入磁盘、不入库。</li>
+                <li><strong>表单数据</strong>：curl、用例、Prompt 配置等存于浏览器 <code>localStorage</code> / <code>sessionStorage</code>，仅在本机浏览器中，不会提交到 Git 仓库。</li>
                 <li><strong>XSS 防护</strong>：报告中所有来自接口 / 模型的内容都做了 HTML 转义后再渲染。</li>
-                <li><strong>私密配置</strong>：<code>judge.config.json</code> 与 <code>reports/</code> 已被 <code>.gitignore</code> 忽略，不会误提交。</li>
+                <li><strong>私密配置</strong>：<code>.env</code>、<code>judge.config.json</code> 与 <code>reports/</code> 已被 <code>.gitignore</code> 忽略，不会误提交。</li>
                 <li><strong>登录态</strong>：cURL 含账号凭证，请勿把含真实 Cookie 的内容分享给他人。</li>
             </ul>
         </section>
@@ -658,7 +755,13 @@ node server.js</code></pre>
             <p><code>reasoning</code> 属于模型思考或预规划，不代表工具真的执行。工具只把成对且成功的 <code>tool_call</code> start/end 事件计入真实工具调用链。若只有 <code>tool_call_intent</code> 或 reasoning 文本，没有成功的 end 事件、<code>latencyMs</code>、<code>output</code>，会被过滤。</p>
 
             <h3>改了代码但页面还是旧表现？</h3>
-            <p>重启 <code>node server.js</code> 后，用 <span class="kbd">Cmd</span> + <span class="kbd">Shift</span> + <span class="kbd">R</span> 硬刷新页面，确保浏览器重新加载 <code>test_tool.html</code> 和 <code>test_tool.helpers.js</code>。</p>
+            <p>重启 <code>node server.js</code> 后，用 <span class="kbd">Cmd</span> + <span class="kbd">Shift</span> + <span class="kbd">R</span> 硬刷新页面，确保浏览器重新加载 <code>test_tool.html</code>、<code>prompt_diff.html</code> 和 <code>test_tool.helpers.js</code>。</p>
+
+            <h3>切换到 Prompt Diff Lab 再切回来，数据丢了？</h3>
+            <p>两个工具页面均支持自动保存与恢复。若仍丢失，请确认未使用无痕模式，并检查浏览器是否禁用了 localStorage。硬刷新不会清除已保存的表单，但关闭标签页会清除 sessionStorage 中的 API Key 和最近报告。</p>
+
+            <h3>Prompt Diff 对比很慢？</h3>
+            <p>每个问题会依次跑 A 和 B 各一次；若开启 AI 裁判，每条还要额外裁判两次。建议先用少量问题验证，再扩大题集。可暂时关闭 AI 裁判，仅看并排回答与字数差异。</p>
         </section>
 
         <section id="files">
@@ -667,7 +770,8 @@ node server.js</code></pre>
                 <thead><tr><th>文件 / 目录</th><th>作用</th></tr></thead>
                 <tbody>
                     <tr><td><code>server.js</code></td><td>后端：CORS 代理、报告存储、AI 模型调用</td></tr>
-                    <tr><td><code>test_tool.html</code></td><td>前端单页应用（主界面）</td></tr>
+                    <tr><td><code>test_tool.html</code></td><td>AgentTest Lab 主界面（接口回归）</td></tr>
+                    <tr><td><code>prompt_diff.html</code></td><td>Prompt Diff Lab 界面（A/B Prompt 对比）</td></tr>
                     <tr><td><code>test_tool.helpers.js</code></td><td>前端 / Node 共用的辅助函数：用例归一化、多轮会话状态、SSE 文本提取、真实工具调用链提取等</td></tr>
                     <tr><td><code>test_tool.helpers.test.js</code></td><td>辅助函数回归测试，覆盖单次/多轮、SSE、conversationId、Trace 和真实工具调用链（<code>npm test</code>）</td></tr>
                     <tr><td><code>使用手册.html</code></td><td>本手册</td></tr>
@@ -685,7 +789,10 @@ node server.js</code></pre>
         </section>
 
         <footer>
-            AgentTest Lab · 使用手册 ｜ 本地访问地址：<code>http://localhost:5001/</code>
+            AgentTest Lab · 使用手册 ｜
+            <a href="/" style="color:var(--primary);">AgentTest Lab</a> ·
+            <a href="/prompt_diff.html" style="color:var(--primary);">Prompt Diff Lab</a> ·
+            本地地址：<code>http://localhost:5001/</code>
         </footer>
     </main>
 </div>
