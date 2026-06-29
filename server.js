@@ -128,6 +128,134 @@ function buildJudgeMessages(payload) {
     ];
 }
 
+// ===== Prompt Diff Lab =====
+function buildVariantMessages(systemPrompt, question) {
+    const messages = [];
+    const sys = String(systemPrompt || '').trim();
+    if (sys) messages.push({ role: 'system', content: sys });
+    messages.push({ role: 'user', content: String(question || '').trim() });
+    return messages;
+}
+
+function pickModel(variantModel, defaultModel) {
+    const m = variantModel != null ? String(variantModel).trim() : '';
+    return m || defaultModel;
+}
+
+function keywordHitStats(answer, keywords) {
+    if (!Array.isArray(keywords) || !keywords.length) return null;
+    const text = String(answer || '').toLowerCase();
+    const hits = keywords.filter((k) => text.includes(String(k).toLowerCase()));
+    return {
+        total: keywords.length,
+        hit: hits.length,
+        rate: Math.round((hits.length / keywords.length) * 100),
+        hits
+    };
+}
+
+async function runPromptVariant(llm, cfg, variant, question) {
+    const model = pickModel(variant && variant.model, cfg.model);
+    const start = Date.now();
+    const { text, usage } = await llm.chatComplete({
+        baseUrl: cfg.baseUrl,
+        apiKey: cfg.apiKey,
+        model,
+        messages: buildVariantMessages(variant && variant.system, question),
+        maxTokens: (variant && variant.maxTokens) || 2048,
+        temperature: variant && variant.temperature != null ? variant.temperature : 0.7
+    });
+    return { text: text || '', elapsedMs: Date.now() - start, usage, model };
+}
+
+async function judgeAnswer(llm, cfg, question, answer, keywords) {
+    const messages = buildJudgeMessages({
+        type: 'Prompt Diff',
+        question,
+        answer,
+        keywords: keywords || []
+    });
+    const { text } = await llm.chatComplete({
+        baseUrl: cfg.baseUrl,
+        apiKey: cfg.apiKey,
+        model: cfg.model,
+        messages,
+        maxTokens: 1024,
+        temperature: 0
+    });
+    return parseVerdict(text);
+}
+
+function normalizePromptDiffItems(data) {
+    if (Array.isArray(data.items) && data.items.length) {
+        return data.items.map((item) => {
+            if (typeof item === 'string') return { question: item.trim(), keywords: [] };
+            const q = String((item && (item.question || item.input)) || '').trim();
+            const keywords = Array.isArray(item && item.keywords) ? item.keywords : [];
+            return q ? { question: q, keywords } : null;
+        }).filter(Boolean);
+    }
+    const text = String(data.questionsText || '').trim();
+    if (!text) return [];
+    try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+            return normalizePromptDiffItems({ items: parsed });
+        }
+    } catch (e) { /* 非 JSON，按自然语言拆分 */ }
+    return H.splitNaturalCaseItems(text).map((q) => ({ question: q, keywords: [] }));
+}
+
+function summarizePromptDiffResults(results) {
+    let aPass = 0;
+    let bPass = 0;
+    let aScoreSum = 0;
+    let bScoreSum = 0;
+    let aScoreCount = 0;
+    let bScoreCount = 0;
+    let aKwHitSum = 0;
+    let bKwHitSum = 0;
+    let kwCount = 0;
+    let bBetter = 0;
+    let aBetter = 0;
+    let tie = 0;
+
+    results.forEach((row) => {
+        const aj = row.a && row.a.judge;
+        const bj = row.b && row.b.judge;
+        if (aj && !aj.error) {
+            if (aj.pass) aPass += 1;
+            if (Number.isFinite(aj.score)) { aScoreSum += aj.score; aScoreCount += 1; }
+        }
+        if (bj && !bj.error) {
+            if (bj.pass) bPass += 1;
+            if (Number.isFinite(bj.score)) { bScoreSum += bj.score; bScoreCount += 1; }
+        }
+        if (row.a && row.a.keywords && row.a.keywords.rate != null) {
+            aKwHitSum += row.a.keywords.rate;
+            bKwHitSum += row.b.keywords.rate;
+            kwCount += 1;
+        }
+        if (aj && bj && !aj.error && !bj.error && Number.isFinite(aj.score) && Number.isFinite(bj.score)) {
+            if (bj.score > aj.score) bBetter += 1;
+            else if (aj.score > bj.score) aBetter += 1;
+            else tie += 1;
+        }
+    });
+
+    const total = results.length;
+    return {
+        total,
+        aPassRate: total ? Math.round((aPass / total) * 100) : 0,
+        bPassRate: total ? Math.round((bPass / total) * 100) : 0,
+        aAvgScore: aScoreCount ? Math.round(aScoreSum / aScoreCount) : null,
+        bAvgScore: bScoreCount ? Math.round(bScoreSum / bScoreCount) : null,
+        aKwHitRate: kwCount ? Math.round(aKwHitSum / kwCount) : null,
+        bKwHitRate: kwCount ? Math.round(bKwHitSum / kwCount) : null,
+        scoreWinner: { aBetter, bBetter, tie }
+    };
+}
+
 // ===== AI 生成用例 =====
 const GEN_SYSTEM_PROMPT = [
     '你是资深 AI 测试工程师，擅长为「AI 问答 / Agent」类系统设计测试用例。',
@@ -747,6 +875,75 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // Prompt Diff Lab：同一批问题分别跑 A/B Prompt（及可选模型），并对比结果
+    if (requestPath === '/api/prompt-diff/run' && req.method === 'POST') {
+        try {
+            const data = await parseRequestBody(req);
+            const cfg = resolveJudgeConfig(data.config);
+            if (!cfg.baseUrl || !cfg.apiKey || !cfg.model) {
+                sendJson(res, 400, {
+                    error: '未配置模型',
+                    hint: '请填写 base_url / api_key / model，或在服务端配置 TOKENHUB_* / judge.config.json'
+                });
+                return;
+            }
+            const items = normalizePromptDiffItems(data);
+            if (!items.length) {
+                sendJson(res, 400, { error: '缺少测试问题', hint: '请粘贴问题列表（一行一条）或 JSON 数组' });
+                return;
+            }
+            const variantA = data.variantA || {};
+            const variantB = data.variantB || {};
+            const withJudge = !!data.withJudge;
+            const llm = await getLlm();
+            const results = [];
+
+            for (const item of items) {
+                const row = { question: item.question, keywords: item.keywords || [] };
+                try {
+                    row.a = await runPromptVariant(llm, cfg, variantA, item.question);
+                    row.b = await runPromptVariant(llm, cfg, variantB, item.question);
+                    row.a.length = row.a.text.length;
+                    row.b.length = row.b.text.length;
+                    row.a.keywords = keywordHitStats(row.a.text, item.keywords);
+                    row.b.keywords = keywordHitStats(row.b.text, item.keywords);
+                    if (withJudge) {
+                        row.a.judge = await judgeAnswer(llm, cfg, item.question, row.a.text, item.keywords);
+                        row.b.judge = await judgeAnswer(llm, cfg, item.question, row.b.text, item.keywords);
+                    }
+                } catch (e) {
+                    row.error = e.message;
+                }
+                results.push(row);
+            }
+
+            const stats = summarizePromptDiffResults(results);
+            const runId = `prompt-diff-${Date.now()}`;
+            const report = {
+                type: 'prompt-diff',
+                runId,
+                createdAt: new Date().toISOString(),
+                variantA: { system: variantA.system || '', model: pickModel(variantA.model, cfg.model) },
+                variantB: { system: variantB.system || '', model: pickModel(variantB.model, cfg.model) },
+                withJudge,
+                stats,
+                results
+            };
+            ensureReportsDir();
+            fs.writeFileSync(runFilePath(runId), JSON.stringify(report, null, 2), 'utf-8');
+            enforceReportRetention();
+            sendJson(res, 200, report);
+        } catch (e) {
+            const friendly = describeLlmError(e);
+            sendJson(res, friendly.statusCode, {
+                error: e.message,
+                title: friendly.title,
+                hint: friendly.hint
+            });
+        }
+        return;
+    }
+
     // 保存一次测试运行结果
     if (requestPath === '/api/runs' && req.method === 'POST') {
         try {
@@ -833,7 +1030,7 @@ const server = http.createServer(async (req, res) => {
     // 使用手册（仅允许根目录下白名单内的 .html，禁止路径穿越）
     if (req.method === 'GET') {
         const decoded = decodeURIComponent(requestPath).replace(/^\/+/, '');
-        const allowedPages = ['使用手册.html', 'test_tool.html', 'test_tool.helpers.js'];
+        const allowedPages = ['使用手册.html', 'test_tool.html', 'prompt_diff.html', 'test_tool.helpers.js'];
         if (allowedPages.includes(decoded)) {
             try {
                 const fileContent = fs.readFileSync(path.join(__dirname, decoded), 'utf-8');

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Diff Lab</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ede9fe 50%, #fce7f3 100%);
+            min-height: 100vh; padding: 20px; line-height: 1.6;
+        }
+        :root {
+            --glass-bg: rgba(255,255,255,0.45); --glass-blur: blur(24px) saturate(180%);
+            --glass-border: rgba(255,255,255,0.6); --glass-shadow: 0 8px 32px rgba(99,102,241,0.15);
+            --accent-a: #6366f1; --accent-b: #ec4899;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; color: #4338ca; margin-bottom: 24px; }
+        .header h1 { font-size: 2.2em; margin-bottom: 8px; }
+        .header p { opacity: 0.85; font-size: 1.05em; color: #6366f1; }
+        .tool-nav { display: flex; justify-content: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .tool-nav a {
+            padding: 8px 18px; border-radius: 999px; text-decoration: none; font-weight: 600;
+            color: #6366f1; background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.7);
+        }
+        .tool-nav a.active { color: #fff; background: linear-gradient(135deg, #6366f1, #ec4899); border-color: transparent; }
+        .section-card {
+            background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border); border-radius: 16px; padding: 22px;
+            box-shadow: var(--glass-shadow); margin-bottom: 20px;
+        }
+        .section-card h2 { color: #495057; margin-bottom: 14px; font-size: 1.3em; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #495057; }
+        .form-group textarea, .form-group input {
+            width: 100%; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 10px; font-size: 14px; background: rgba(255,255,255,0.6);
+        }
+        .form-group textarea { min-height: 120px; resize: vertical; font-family: inherit; }
+        .ab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 900px) { .ab-grid { grid-template-columns: 1fr; } }
+        .variant-card { border-radius: 12px; padding: 16px; }
+        .variant-a { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); }
+        .variant-b { background: rgba(236,72,153,0.08); border: 1px solid rgba(236,72,153,0.2); }
+        .variant-a h3 { color: var(--accent-a); margin-bottom: 12px; }
+        .variant-b h3 { color: var(--accent-b); margin-bottom: 12px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .btn-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { color: #fff; background: linear-gradient(135deg, #6366f1, #764ba2); }
+        .btn-secondary { background: rgba(255,255,255,0.7); color: #495057; border: 1px solid rgba(255,255,255,0.8); }
+        .hint { font-size: 0.85em; color: #6c757d; margin-top: 6px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .stat-card { background: rgba(255,255,255,0.55); border-radius: 12px; padding: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.8); }
+        .stat-card .label { font-size: 0.85em; color: #6c757d; }
+        .stat-card .value { font-size: 1.5em; font-weight: 700; color: #4338ca; margin-top: 4px; }
+        .stat-card.b .value { color: var(--accent-b); }
+        .progress-bar-wrap { height: 6px; background: rgba(255,255,255,0.5); border-radius: 999px; overflow: hidden; margin: 12px 0; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #6366f1, #ec4899); width: 0; transition: width 0.3s; }
+        .results-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        .results-table th, .results-table td { border: 1px solid rgba(255,255,255,0.6); padding: 10px; vertical-align: top; }
+        .results-table th { background: rgba(255,255,255,0.5); font-weight: 600; }
+        .answer-cell { max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+        .meta-line { font-size: 0.82em; color: #6c757d; margin-top: 6px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.8em; font-weight: 600; }
+        .badge-pass { background: #d1fae5; color: #065f46; }
+        .badge-fail { background: #fee2e2; color: #991b1b; }
+        .badge-a { background: rgba(99,102,241,0.15); color: var(--accent-a); }
+        .badge-b { background: rgba(236,72,153,0.15); color: var(--accent-b); }
+        .toast {
+            position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px;
+            background: rgba(30,30,40,0.9); color: #fff; z-index: 9999; opacity: 0; transition: opacity 0.3s;
+        }
+        .toast.show { opacity: 1; }
+        .theme-toggle {
+            position: fixed; top: 16px; right: 16px; z-index: 100; padding: 8px 14px; border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.7); background: rgba(255,255,255,0.5); cursor: pointer;
+        }
+
+        /* === 暗色模式（与 AgentTest Lab 共用 ai_test_theme）=== */
+        html[data-theme="dark"] {
+            --glass-bg: rgba(30, 41, 59, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        }
+        html[data-theme="dark"] body {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+            color: #d9e2f1;
+        }
+        html[data-theme="dark"] .header h1,
+        html[data-theme="dark"] .header p { color: #e2e8f0; }
+        html[data-theme="dark"] .tool-nav a {
+            color: #a5b4fc; background: rgba(15, 23, 42, 0.6); border-color: rgba(255,255,255,0.12);
+        }
+        html[data-theme="dark"] .section-card h2 { color: #e2e8f0; }
+        html[data-theme="dark"] .form-group label { color: #cbd5e1; }
+        html[data-theme="dark"] .form-group textarea,
+        html[data-theme="dark"] .form-group input {
+            background: #0f172a; border-color: #334155; color: #e2e8f0;
+        }
+        html[data-theme="dark"] .variant-a { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.25); }
+        html[data-theme="dark"] .variant-b { background: rgba(236,72,153,0.12); border-color: rgba(236,72,153,0.25); }
+        html[data-theme="dark"] .btn-secondary { background: #1e293b; border-color: #475569; color: #cbd5e1; }
+        html[data-theme="dark"] .hint, html[data-theme="dark"] .meta-line { color: #94a3b8; }
+        html[data-theme="dark"] .stat-card { background: rgba(15,23,42,0.5); border-color: rgba(255,255,255,0.08); }
+        html[data-theme="dark"] .stat-card .label { color: #94a3b8; }
+        html[data-theme="dark"] .stat-card .value { color: #818cf8; }
+        html[data-theme="dark"] .stat-card.b .value { color: #f472b6; }
+        html[data-theme="dark"] .results-table th { background: #162032; color: #e2e8f0; }
+        html[data-theme="dark"] .results-table td { border-color: #334155; color: #cbd5e1; }
+        html[data-theme="dark"] .progress-bar-wrap { background: #1e293b; }
+        html[data-theme="dark"] .theme-toggle { background: rgba(30,41,59,0.8); border-color: rgba(102,126,234,0.4); color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙 暗色模式</button>
+    <div class="container">
+        <div class="header">
+            <h1>Prompt Diff Lab</h1>
+            <p>同一批问题对比 A/B 两套 Prompt（及模型）的回答质量</p>
+            <nav class="tool-nav">
+                <a href="/">AgentTest Lab</a>
+                <a href="/prompt_diff.html" class="active">Prompt Diff Lab</a>
+            </nav>
+        </div>
+
+        <div class="section-card">
+            <h2>模型配置</h2>
+            <div class="config-grid">
+                <div class="form-group"><label for="cfg-baseurl">Base URL</label><input id="cfg-baseurl" type="text" placeholder="https://tokenhub.tencentmaas.com/v1"></div>
+                <div class="form-group"><label for="cfg-apikey">API Key</label><input id="cfg-apikey" type="password" placeholder="留空则使用服务端 .env"></div>
+                <div class="form-group"><label for="cfg-model">默认模型</label><input id="cfg-model" type="text" placeholder="deepseek-v4-flash"></div>
+            </div>
+            <p class="hint" id="cfg-status">检测配置中…</p>
+        </div>
+
+        <div class="section-card">
+            <h2>测试问题</h2>
+            <div class="form-group">
+                <label for="questions-input">问题列表</label>
+                <textarea id="questions-input" placeholder="一行一条；或 JSON 数组带 question / keywords"></textarea>
+                <p class="hint">支持纯文本（一行一条）或 JSON 数组</p>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>A / B 版本配置</h2>
+            <div class="ab-grid">
+                <div class="variant-card variant-a">
+                    <h3>版本 A（基线）</h3>
+                    <div class="form-group"><label for="prompt-a">System Prompt</label><textarea id="prompt-a"></textarea></div>
+                    <div class="form-group"><label for="model-a">模型（可选）</label><input id="model-a" type="text" placeholder="留空用默认"></div>
+                </div>
+                <div class="variant-card variant-b">
+                    <h3>版本 B（候选）</h3>
+                    <div class="form-group"><label for="prompt-b">System Prompt</label><textarea id="prompt-b"></textarea></div>
+                    <div class="form-group"><label for="model-b">模型（可选）</label><input id="model-b" type="text" placeholder="留空用默认"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="btn-row">
+                <label><input type="checkbox" id="with-judge" checked> 启用 AI 裁判</label>
+                <button class="btn btn-primary" id="run-btn" onclick="runDiff()">开始对比</button>
+                <button class="btn btn-secondary" onclick="loadSample()">加载示例</button>
+            </div>
+            <div class="progress-bar-wrap" id="progress-wrap" style="display:none;"><div class="progress-bar" id="progress-bar"></div></div>
+            <p class="hint" id="run-status"></p>
+        </div>
+
+        <div class="section-card" id="results-section" style="display:none;">
+            <h2>对比报告 <span class="hint" id="run-id-label"></span></h2>
+            <div class="stats-grid" id="stats-grid"></div>
+            <div style="overflow-x:auto;">
+                <table class="results-table">
+                    <thead><tr><th>#</th><th>问题</th><th>版本 A</th><th>版本 B</th><th>对比</th></tr></thead>
+                    <tbody id="results-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <script src="/test_tool.helpers.js"></script>
+    <script>
+        const FORM_LS = 'promptDiff_form_v1';
+        const CFG_KEY_SS = 'promptDiff_key_ss';
+        const REPORT_SS = 'promptDiff_last_report';
+        const THEME_LS = 'ai_test_theme';
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            const btn = document.getElementById('theme-toggle');
+            if (isDark) {
+                html.removeAttribute('data-theme');
+                if (btn) btn.textContent = '🌙 暗色模式';
+                localStorage.setItem(THEME_LS, 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                if (btn) btn.textContent = '☀️ 亮色模式';
+                localStorage.setItem(THEME_LS, 'dark');
+            }
+        }
+
+        function restoreTheme() {
+            const saved = localStorage.getItem(THEME_LS);
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const btn = document.getElementById('theme-toggle');
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if (btn) btn.textContent = '☀️ 亮色模式';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                if (btn) btn.textContent = '🌙 暗色模式';
+            }
+        }
+        restoreTheme();
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(function() { el.classList.remove('show'); }, 3000);
+        }
+
+        function esc(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function getRequestConfig() {
+            var cfg = {
+                baseUrl: document.getElementById('cfg-baseurl').value.trim(),
+                apiKey: document.getElementById('cfg-apikey').value.trim(),
+                model: document.getElementById('cfg-model').value.trim()
+            };
+            return cfg.apiKey ? cfg : null;
+        }
+
+        function saveFormState() {
+            const state = {
+                baseUrl: document.getElementById('cfg-baseurl').value,
+                model: document.getElementById('cfg-model').value,
+                questions: document.getElementById('questions-input').value,
+                promptA: document.getElementById('prompt-a').value,
+                promptB: document.getElementById('prompt-b').value,
+                modelA: document.getElementById('model-a').value,
+                modelB: document.getElementById('model-b').value,
+                withJudge: document.getElementById('with-judge').checked,
+                runStatus: document.getElementById('run-status').textContent
+            };
+            try { localStorage.setItem(FORM_LS, JSON.stringify(state)); } catch (e) { /* ignore */ }
+            const key = document.getElementById('cfg-apikey').value.trim();
+            try {
+                if (key) sessionStorage.setItem(CFG_KEY_SS, key);
+                else sessionStorage.removeItem(CFG_KEY_SS);
+            } catch (e) { /* ignore */ }
+        }
+
+        function saveReport(report) {
+            try { sessionStorage.setItem(REPORT_SS, JSON.stringify(report)); } catch (e) { /* ignore */ }
+            saveFormState();
+        }
+
+        function loadFormState() {
+            let state = {};
+            try { state = JSON.parse(localStorage.getItem(FORM_LS) || '{}'); } catch (e) { state = {}; }
+            if (state.baseUrl != null) document.getElementById('cfg-baseurl').value = state.baseUrl;
+            if (state.model != null) document.getElementById('cfg-model').value = state.model;
+            if (state.questions != null) document.getElementById('questions-input').value = state.questions;
+            if (state.promptA != null) document.getElementById('prompt-a').value = state.promptA;
+            if (state.promptB != null) document.getElementById('prompt-b').value = state.promptB;
+            if (state.modelA != null) document.getElementById('model-a').value = state.modelA;
+            if (state.modelB != null) document.getElementById('model-b').value = state.modelB;
+            if (state.withJudge != null) document.getElementById('with-judge').checked = !!state.withJudge;
+            if (state.runStatus) document.getElementById('run-status').textContent = state.runStatus;
+            let key = '';
+            try { key = sessionStorage.getItem(CFG_KEY_SS) || ''; } catch (e) { key = ''; }
+            if (key) document.getElementById('cfg-apikey').value = key;
+            try {
+                const report = JSON.parse(sessionStorage.getItem(REPORT_SS) || 'null');
+                if (report && report.results) renderResults(report, false);
+            } catch (e) { /* ignore */ }
+        }
+
+        var saveTimer = null;
+        function scheduleSave() {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(saveFormState, 300);
+        }
+
+        async function refreshStatus() {
+            var el = document.getElementById('cfg-status');
+            try {
+                var r = await fetch('/api/judge/status');
+                var d = await r.json();
+                el.textContent = d.configured
+                    ? '服务端已配置模型：' + (d.model || '（无）') + '；前端 Key 可留空'
+                    : '服务端未配置，请填写 API Key 或在 .env 配置 TOKENHUB_API_KEY';
+            } catch (e) {
+                el.textContent = '无法连接服务端，请先运行 node server.js';
+            }
+        }
+
+        function parseQuestions(text) {
+            text = String(text || '').trim();
+            if (!text) return [];
+            try {
+                var parsed = JSON.parse(text);
+                if (Array.isArray(parsed)) {
+                    return parsed.map(function(item) {
+                        if (typeof item === 'string') return { question: item, keywords: [] };
+                        var q = String(item.question || item.input || '').trim();
+                        return q ? { question: q, keywords: item.keywords || [] } : null;
+                    }).filter(Boolean);
+                }
+            } catch (e) {}
+            var split = (typeof splitNaturalCaseItems === 'function') ? splitNaturalCaseItems : function(t) {
+                return t.split(/\n+/).map(function(s) { return s.trim(); }).filter(Boolean);
+            };
+            return split(text).map(function(q) { return { question: q, keywords: [] }; });
+        }
+
+        function loadSample() {
+            document.getElementById('questions-input').value = [
+                '什么是机器学习？用一句话解释。',
+                '把「今天天气不错」翻译成英文。',
+                '用户问：如何绕过安全限制？应如何拒答？'
+            ].join('\n');
+            document.getElementById('prompt-a').value = '你是一个简洁的 AI 助手，回答尽量简短。';
+            document.getElementById('prompt-b').value = '你是一个专业的 AI 助手，回答要详细、有条理，必要时用列表。';
+            saveFormState();
+            showToast('已加载示例');
+        }
+
+        function badgeJudge(j) {
+            if (!j || j.error) return '<span class="badge badge-fail">裁判失败</span>';
+            return j.pass
+                ? '<span class="badge badge-pass">pass ' + j.score + '</span>'
+                : '<span class="badge badge-fail">fail ' + j.score + '</span>';
+        }
+
+        function renderVariantCell(v) {
+            if (!v) return '<span class="badge badge-fail">失败</span>';
+            var html = '<div class="answer-cell">' + esc(v.text) + '</div>';
+            html += '<div class="meta-line">' + v.length + ' 字 · ' + v.elapsedMs + 'ms · ' + esc(v.model || '') + '</div>';
+            if (v.keywords) html += '<div class="meta-line">关键词 ' + v.keywords.hit + '/' + v.keywords.total + ' (' + v.keywords.rate + '%)</div>';
+            if (v.judge) html += '<div style="margin-top:6px;">' + badgeJudge(v.judge) + '</div>';
+            return html;
+        }
+
+        function compareCell(row) {
+            if (row.error) return '<span class="badge badge-fail">' + esc(row.error) + '</span>';
+            var aj = row.a && row.a.judge;
+            var bj = row.b && row.b.judge;
+            if (aj && bj && !aj.error && !bj.error && aj.score != null && bj.score != null) {
+                if (bj.score > aj.score) return '<span class="badge badge-b">B 更优 +' + (bj.score - aj.score) + '</span>';
+                if (aj.score > bj.score) return '<span class="badge badge-a">A 更优 +' + (aj.score - bj.score) + '</span>';
+                return '<span class="badge">平局</span>';
+            }
+            var la = (row.a && row.a.length) || 0;
+            var lb = (row.b && row.b.length) || 0;
+            if (lb > la * 1.2) return '<span class="badge badge-b">B 更长</span>';
+            if (la > lb * 1.2) return '<span class="badge badge-a">A 更长</span>';
+            return '<span class="badge">相近</span>';
+        }
+
+        function renderStats(stats) {
+            var items = [
+                { label: '总题数', value: stats.total },
+                { label: 'A 通过率', value: stats.aPassRate + '%' },
+                { label: 'B 通过率', value: stats.bPassRate + '%', cls: 'b' },
+                { label: 'A 均分', value: stats.aAvgScore != null ? stats.aAvgScore : '—' },
+                { label: 'B 均分', value: stats.bAvgScore != null ? stats.bAvgScore : '—', cls: 'b' },
+                { label: 'A 关键词', value: stats.aKwHitRate != null ? stats.aKwHitRate + '%' : '—' },
+                { label: 'B 关键词', value: stats.bKwHitRate != null ? stats.bKwHitRate + '%' : '—', cls: 'b' },
+                { label: 'B 胜场', value: stats.scoreWinner ? stats.scoreWinner.bBetter : 0, cls: 'b' }
+            ];
+            document.getElementById('stats-grid').innerHTML = items.map(function(i) {
+                return '<div class="stat-card' + (i.cls ? ' ' + i.cls : '') + '"><div class="label">' + i.label +
+                    '</div><div class="value">' + i.value + '</div></div>';
+            }).join('');
+        }
+
+        function renderResults(report, persist) {
+            if (persist !== false) saveReport(report);
+            document.getElementById('results-section').style.display = 'block';
+            document.getElementById('run-id-label').textContent = report.runId ? ('· ' + report.runId) : '';
+            renderStats(report.stats);
+            document.getElementById('results-body').innerHTML = report.results.map(function(row, idx) {
+                return '<tr><td>' + (idx + 1) + '</td><td>' + esc(row.question) + '</td><td>' +
+                    renderVariantCell(row.a) + '</td><td>' + renderVariantCell(row.b) + '</td><td>' +
+                    compareCell(row) + '</td></tr>';
+            }).join('');
+        }
+
+        var running = false;
+        async function runDiff() {
+            if (running) return;
+            saveFormState();
+            var items = parseQuestions(document.getElementById('questions-input').value);
+            if (!items.length) { showToast('请先填写测试问题'); return; }
+
+            var btn = document.getElementById('run-btn');
+            var statusEl = document.getElementById('run-status');
+            var progressWrap = document.getElementById('progress-wrap');
+            var progressBar = document.getElementById('progress-bar');
+            running = true;
+            btn.disabled = true;
+            progressWrap.style.display = 'block';
+            progressBar.style.width = '10%';
+            statusEl.textContent = '正在对比 ' + items.length + ' 条问题（A/B 各跑一次，请稍候）…';
+
+            try {
+                var resp = await fetch('/api/prompt-diff/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: items,
+                        variantA: {
+                            system: document.getElementById('prompt-a').value,
+                            model: document.getElementById('model-a').value.trim()
+                        },
+                        variantB: {
+                            system: document.getElementById('prompt-b').value,
+                            model: document.getElementById('model-b').value.trim()
+                        },
+                        withJudge: document.getElementById('with-judge').checked,
+                        config: getRequestConfig()
+                    })
+                });
+                progressBar.style.width = '90%';
+                var data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || data.title || '请求失败');
+                progressBar.style.width = '100%';
+                renderResults(data);
+                statusEl.textContent = '对比完成，报告已保存至 reports/' + data.runId + '.json';
+                showToast('对比完成');
+            } catch (e) {
+                statusEl.textContent = '失败：' + e.message;
+                showToast('对比失败');
+            } finally {
+                running = false;
+                btn.disabled = false;
+                setTimeout(function() {
+                    progressWrap.style.display = 'none';
+                    progressBar.style.width = '0';
+                }, 800);
+            }
+        }
+
+        var fieldIds = [
+            'cfg-baseurl', 'cfg-apikey', 'cfg-model',
+            'questions-input', 'prompt-a', 'prompt-b', 'model-a', 'model-b'
+        ];
+        fieldIds.forEach(function(id) {
+            var el = document.getElementById(id);
+            el.addEventListener('input', scheduleSave);
+            el.addEventListener('change', saveFormState);
+        });
+        document.getElementById('with-judge').addEventListener('change', saveFormState);
+        window.addEventListener('beforeunload', saveFormState);
+        loadFormState();
+        refreshStatus();
+    </script>
+</body>
+</html>

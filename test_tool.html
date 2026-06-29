@@ -50,6 +50,36 @@
             color: #6366f1;
         }
 
+        .tool-nav {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .tool-nav a {
+            padding: 8px 18px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #6366f1;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            transition: all 0.2s;
+        }
+
+        .tool-nav a:hover {
+            background: rgba(255, 255, 255, 0.75);
+        }
+
+        .tool-nav a.active {
+            color: #fff;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: transparent;
+        }
+
         .input-section {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -1151,6 +1181,9 @@
         html[data-theme="dark"] .progress-bar { background: #1e293b; box-shadow: 0 2px 10px rgba(0,0,0,0.35); }
         html[data-theme="dark"] .pb-row { color: #cbd5e1; }
         html[data-theme="dark"] .theme-toggle { background: rgba(30,41,59,0.8); border-color: rgba(102,126,234,0.4); }
+        html[data-theme="dark"] .tool-nav a {
+            color: #a5b4fc; background: rgba(15, 23, 42, 0.6); border-color: rgba(255,255,255,0.12);
+        }
         html[data-theme="dark"] .test-type { background: #2d3a50; color: #94a3b8; }
         html[data-theme="dark"] .expand-btn { background: #2d3a50; color: #cbd5e1; }
         html[data-theme="dark"] .expand-btn:hover { background: #3d4f6c; }
@@ -1182,6 +1215,10 @@
         <div class="header">
             <h1>AgentTest Lab</h1>
             <p>面向 AI Agent 的批量测试、AI 裁判与工具调用链 Trace 校验平台</p>
+            <nav class="tool-nav">
+                <a href="/" class="active">AgentTest Lab</a>
+                <a href="/prompt_diff.html">Prompt Diff Lab</a>
+            </nav>
         </div>
 
         <div class="input-section">
@@ -1497,6 +1534,7 @@
             if (!textarea) return;
             textarea.value = JSON.stringify(getExampleDataset(mode), null, 2);
             updateDatasetStatus();
+            saveFormState();
         }
 
         function updateDialogueModeUI() {
@@ -2364,6 +2402,7 @@
                 setFileName(`导入失败：${err.message}`, 'error');
             }
             updateDatasetStatus();
+            saveFormState();
         }
 
         // ===== AI 转换 / 生成用例 =====
@@ -2408,6 +2447,7 @@
                 const inputCount = data.inputCount || data.cases.length;
                 setConvertStatus(`✓ 已按 ${inputCount} 条输入转换为 ${data.cases.length} 条标准用例，并填入文本框`, 'ok');
                 updateDatasetStatus();
+                saveFormState();
             } catch (e) {
                 setConvertStatus('✗ 请求失败：' + e.message, 'error');
             } finally {
@@ -2455,6 +2495,7 @@
                 }
                 document.getElementById('dataset-input').value = JSON.stringify(data.cases, null, 2);
                 setGenStatus(`✓ 已生成 ${data.cases.length} 条草稿并填入文本框，请审核/微调后运行`, 'ok');
+                saveFormState();
             } catch (e) {
                 setGenStatus('✗ 请求失败：' + e.message, 'error');
             } finally {
@@ -3718,6 +3759,58 @@ tr.p{background:#f6fdf8}
 
         // ===== 刷新自动恢复最近一次报告（sessionStorage）=====
         const LAST_RESULT_SS = 'ai_last_results';
+        const FORM_LS = 'agentTest_form_v1';
+        let formSaveTimer = null;
+
+        function collectFormState() {
+            return {
+                curl: document.getElementById('curl-input')?.value ?? '',
+                dataset: document.getElementById('dataset-input')?.value ?? '',
+                questionPath: document.getElementById('question-path-input')?.value ?? 'auto',
+                contextPath: document.getElementById('context-path-input')?.value ?? 'auto',
+                concurrency: document.getElementById('concurrency-input')?.value ?? '3',
+                keywordThreshold: document.getElementById('keyword-threshold-input')?.value ?? '60',
+                aiGenRequirement: document.getElementById('ai-gen-requirement')?.value ?? '',
+                aiGenCount: document.getElementById('ai-gen-count')?.value ?? '6',
+                aiConvertSource: document.getElementById('ai-convert-source')?.value ?? '',
+                datasetFileName: document.getElementById('dataset-file-name')?.textContent ?? ''
+            };
+        }
+
+        function saveFormState() {
+            try {
+                localStorage.setItem(FORM_LS, JSON.stringify(collectFormState()));
+            } catch (e) { /* 配额超限则跳过 */ }
+        }
+
+        function scheduleFormSave() {
+            clearTimeout(formSaveTimer);
+            formSaveTimer = setTimeout(saveFormState, 300);
+        }
+
+        function loadFormState() {
+            let raw = null;
+            try { raw = localStorage.getItem(FORM_LS); } catch (e) { raw = null; }
+            if (!raw) return false;
+            let state = {};
+            try { state = JSON.parse(raw); } catch (e) { return false; }
+            const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+            set('curl-input', state.curl);
+            set('dataset-input', state.dataset);
+            set('question-path-input', state.questionPath);
+            set('context-path-input', state.contextPath);
+            set('concurrency-input', state.concurrency);
+            set('keyword-threshold-input', state.keywordThreshold);
+            set('ai-gen-requirement', state.aiGenRequirement);
+            set('ai-gen-count', state.aiGenCount);
+            set('ai-convert-source', state.aiConvertSource);
+            if (state.datasetFileName) {
+                const nameEl = document.getElementById('dataset-file-name');
+                if (nameEl) nameEl.textContent = state.datasetFileName;
+            }
+            return true;
+        }
+
         function saveLastResultsToSession(results, passedCount) {
             try {
                 // 截断超长内容，避免超出存储配额
@@ -4209,17 +4302,38 @@ tr.p{background:#f6fdf8}
 
         // 示例数据
         document.addEventListener('DOMContentLoaded', function() {
-            // 恢复暗色模式
             restoreTheme();
 
-            // Curl 实时解析监听
-            const curlInput = document.getElementById('curl-input');
-            if (curlInput) curlInput.addEventListener('input', updateCurlStatus);
+            restoreDialogueMode();
+            const hasSavedForm = loadFormState();
+            if (!hasSavedForm) {
+                applyExampleDataset(getDialogueMode());
+            }
 
-            // 数据集实时解析监听
+            const curlInput = document.getElementById('curl-input');
+            if (curlInput) {
+                curlInput.addEventListener('input', () => { updateCurlStatus(); scheduleFormSave(); });
+            }
+
             const datasetInput = document.getElementById('dataset-input');
-            if (datasetInput) datasetInput.addEventListener('input', updateDatasetStatus);
-            // 恢复裁判模型配置并检测状态
+            if (datasetInput) {
+                datasetInput.addEventListener('input', () => { updateDatasetStatus(); scheduleFormSave(); });
+            }
+
+            [
+                'question-path-input', 'context-path-input', 'concurrency-input',
+                'keyword-threshold-input', 'ai-gen-requirement', 'ai-gen-count', 'ai-convert-source'
+            ].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', scheduleFormSave);
+                    el.addEventListener('change', saveFormState);
+                }
+            });
+
+            updateCurlStatus();
+            updateDatasetStatus();
+
             loadJudgeConfig();
             refreshJudgeStatus();
             ['judge-baseurl-input', 'judge-apikey-input', 'judge-model-input'].forEach(id => {
@@ -4230,7 +4344,6 @@ tr.p{background:#f6fdf8}
             if (toggleEl) toggleEl.addEventListener('change', () => { saveJudgeConfig(); updateJudgeBodyVisibility(); });
             updateJudgeBodyVisibility();
 
-            // 上传用例文件
             const uploadBtn = document.getElementById('dataset-upload-btn');
             const fileInput = document.getElementById('dataset-file');
             if (uploadBtn && fileInput) {
@@ -4238,11 +4351,10 @@ tr.p{background:#f6fdf8}
                 fileInput.addEventListener('change', (e) => {
                     const file = e.target.files && e.target.files[0];
                     handleDatasetFile(file);
-                    e.target.value = ''; // 允许重复上传同一文件
+                    e.target.value = '';
                 });
             }
 
-            // AI 转换 / 生成用例
             const convertToggle = document.getElementById('ai-convert-toggle');
             const convertBtn = document.getElementById('ai-convert-btn');
             const genToggle = document.getElementById('ai-gen-toggle');
@@ -4252,17 +4364,14 @@ tr.p{background:#f6fdf8}
             if (genToggle) genToggle.addEventListener('click', toggleAiGen);
             if (genBtn) genBtn.addEventListener('click', generateCases);
 
-            // 刷新后自动恢复最近一次报告
             restoreLastResults();
 
-            // 对话模式与示例用例
-            restoreDialogueMode();
             const multiTurnToggle = document.getElementById('multi-turn-mode-toggle');
             if (multiTurnToggle) {
                 multiTurnToggle.addEventListener('change', onDialogueModeToggle);
             }
-            applyExampleDataset(getDialogueMode());
             updateSendBtnState();
+            window.addEventListener('beforeunload', saveFormState);
         });
 
         // ===== 暗色模式 =====
