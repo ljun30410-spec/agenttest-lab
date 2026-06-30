@@ -1014,6 +1014,19 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
+    // favicon
+    if ((req.url === '/favicon.svg' || req.url === '/favicon.ico') && req.method === 'GET') {
+        try {
+            const svg = fs.readFileSync(path.join(__dirname, 'favicon.svg'), 'utf-8');
+            res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
+            res.end(svg);
+        } catch (e) {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Not Found');
+        }
+        return;
+    }
+
     // 返回测试工具页面
     if (req.url === '/' && req.method === 'GET') {
         try {
